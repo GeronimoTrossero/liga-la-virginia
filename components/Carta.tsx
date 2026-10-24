@@ -21,7 +21,7 @@ export type CartaProps = {
   href?: string;
 };
 
-const dims = { sm: "w-[150px] h-[220px]", md: "w-[220px] h-[320px]", lg: "w-[280px] h-[410px]" };
+const dims = { sm: "w-[150px] h-[235px]", md: "w-[220px] h-[345px]", lg: "w-[280px] h-[440px]" };
 
 export function Carta(p: CartaProps) {
   const size = p.size ?? "md";
@@ -44,7 +44,7 @@ export function Carta(p: CartaProps) {
                 transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 className={`font-display font-black ${sm ? "text-4xl" : size === "md" ? "text-6xl" : "text-7xl"}`}
               >
-                {Math.floor(p.puntaje)}
+                {fmtPts(p.puntaje).split(",")[0]}
                 <span className={sm ? "text-lg" : "text-2xl"}>,{fmtPts(p.puntaje).split(",")[1]}</span>
               </motion.div>
             </AnimatePresence>
