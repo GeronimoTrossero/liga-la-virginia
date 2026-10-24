@@ -9,7 +9,7 @@ export const COOKIE = "liga_session";
 
 function secret() {
   // AUTH_SECRET si existe; si no, derivamos de la service role (nunca sale del servidor).
-  const s = (process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim();
+  const s = (process.env.AUTH_SECRET || process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_JWT_SECRET || "").trim();
   if (!s) throw new Error("Falta AUTH_SECRET");
   return new TextEncoder().encode(`liga-la-virginia:${s}`);
 }

@@ -1,4 +1,6 @@
 import type { Nivel, Semaforo } from "@/lib/scoring";
+import { Lock } from "lucide-react";
+import { Ilus, NIVEL_ILUS } from "@/components/Icono";
 
 // Semáforo: colores semánticos, distintos del azul y el amarillo institucionales.
 export const SEM_COLOR: Record<Semaforo, string> = { verde: "#1f8a4c", amarillo: "#c77700", rojo: "#c8312b" };
@@ -9,15 +11,14 @@ export const SEM_LABEL: Record<Semaforo, string> = { verde: "en objetivo", amari
 // Niveles: Oro = amarillo de marca, Diamante = azul institucional. Texto legible sobre blanco.
 export const NIVEL_COLOR: Record<Nivel, string> = { Diamante: "#164194", Oro: "#8a6d00", Plata: "#5a6573", Bronce: "#7a4a22" };
 export const NIVEL_BG: Record<Nivel, string> = { Diamante: "#e9eff9", Oro: "#fff5cc", Plata: "#eef0f3", Bronce: "#f5e6d8" };
-export const NIVEL_ICON: Record<Nivel, string> = { Diamante: "💎", Oro: "🥇", Plata: "🥈", Bronce: "🥉" };
 
 /** Color de acento por división (variedades de té y café de La Virginia). */
 export const VARIEDADES = ["#164194", "#2a402b", "#723181", "#895e36", "#912c28", "#597840", "#1b133f", "#ed983c", "#704a19"];
 
 export function NivelBadge({ nivel, bloqueado }: { nivel: Nivel; bloqueado?: boolean }) {
   return (
-    <span className="chip uppercase tracking-wide" style={{ color: NIVEL_COLOR[nivel], background: NIVEL_BG[nivel] }}>
-      {bloqueado ? "🔒" : NIVEL_ICON[nivel]} {nivel}
+    <span className="chip inline-flex items-center gap-1.5 uppercase tracking-wide" style={{ color: NIVEL_COLOR[nivel], background: NIVEL_BG[nivel] }}>
+      {bloqueado ? <Lock className="size-3.5" aria-label="bloqueado" /> : <Ilus n={NIVEL_ILUS[nivel]} size={18} quieto={nivel !== "Diamante"} />} {nivel}
     </span>
   );
 }
@@ -28,7 +29,7 @@ export function Dot({ s, size = 10 }: { s: Semaforo; size?: number }) {
 
 export function Delta({ d, unit = "" }: { d: number | null; unit?: string }) {
   if (d === null || d === 0) return <span className="text-tenue">=</span>;
-  return d > 0 ? <span className="font-semibold text-verde-t">▲{d}{unit}</span> : <span className="font-semibold text-rojo-t">▼{Math.abs(d)}{unit}</span>;
+  return d > 0 ? <span className="font-semibold text-verde-t"><span className="anim-subir text-[0.8em]" aria-hidden>▲</span><span className="sr-only">sube </span>{d}{unit}</span> : <span className="font-semibold text-rojo-t"><span className="anim-bajar text-[0.8em]" aria-hidden>▼</span><span className="sr-only">baja </span>{Math.abs(d)}{unit}</span>;
 }
 
 /** Encabezado de sección al estilo del sitio: volanta dorada + título azul. */

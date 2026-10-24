@@ -10,6 +10,8 @@ import { VendedorPanel } from "@/components/VendedorPanel";
 import { Automatizacion } from "@/components/Automatizacion";
 import { Rachas, RiesgoBanners, TemporadaCard, TuLiga } from "@/components/Juego";
 import { Progreso, SectionTitle } from "@/components/ui";
+import { Ilus, IconoMision } from "@/components/Icono";
+import { CheckCircle2, Gift, HandHeart, Star } from "lucide-react";
 
 export default async function VendedorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -46,11 +48,11 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
         <div className="space-y-2">
           {recos.length > 0 && (
             <div className="rounded-xl border-l-4 border-sol bg-sol-suave px-4 py-3" role="status">
-              <div className="font-bold text-azul">👏 {recos[0].de} te reconoció</div>
+              <div className="flex items-center gap-2 font-bold text-azul"><HandHeart className="anim-latido-suave size-5" aria-hidden /> {recos[0].de} te reconoció</div>
               <div className="text-sm text-tinta">&ldquo;{recos[0].mensaje}&rdquo;</div>
             </div>
           )}
-          {mvp?.id === id && <div className="rounded-xl border-l-4 border-verde bg-verde-s px-4 py-3 font-semibold text-verde-t">⭐ Sos el MVP de {me.sucursal}: el que más mejoró este mes (+{mvp.mejora.toFixed(1).replace(".", ",")} pts).</div>}
+          {mvp?.id === id && <div className="rounded-xl border-l-4 border-verde bg-verde-s px-4 py-3 font-semibold text-verde-t"><Star className="anim-destello mr-1.5 inline size-5 fill-current" aria-hidden />Sos el MVP de {me.sucursal}: el que más mejoró este mes (+{mvp.mejora.toFixed(1).replace(".", ",")} pts).</div>}
         </div>
       )}
       <RiesgoBanners g={g} />
@@ -83,25 +85,25 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
             <div className="franja h-1.5" aria-hidden />
             <div className="p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="text-3xl">{mEq.icono}</div>
+                <IconoMision icono={mEq.icono} />
                 <span className="chip bg-azul text-white">Colectiva · equipo {me.supervisor.split(" ")[0]}</span>
               </div>
               <div className="mt-2 text-lg font-bold text-azul">{mEq.titulo}</div>
               <div className="text-sm text-niebla">{mEq.descripcion} La eligió tu gerente.</div>
               <Progreso p={progEq} />
-              <div className="mt-1.5 flex justify-between text-xs"><span className={progEq >= 1 ? "font-bold text-verde-t" : "text-niebla"}>{progEq >= 1 ? "✅ Cumplida" : `${Math.round(progEq * 100)}%`}</span><span className="font-semibold text-dorado-texto">🎁 Tercer Tiempo</span></div>
+              <div className="mt-1.5 flex justify-between text-xs"><span className={progEq >= 1 ? "font-bold text-verde-t" : "text-niebla"}>{progEq >= 1 ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="anim-pop size-3.5" aria-hidden /> Cumplida</span> : `${Math.round(progEq * 100)}%`}</span><span className="inline-flex items-center gap-1 font-semibold text-dorado-texto"><Gift className="size-3.5" aria-hidden /> Tercer Tiempo</span></div>
             </div>
           </div>
           {misiones.map((m) => (
             <div key={m.id} className={`panel p-4 ${m.prog >= 1 ? "!border-verde" : ""}`}>
               <div className="flex items-start justify-between gap-2">
-                <div className="text-3xl">{m.icono}</div>
+                <IconoMision icono={m.icono} />
                 <span className="chip bg-fondo text-niebla">Individual · +20 PL</span>
               </div>
               <div className="mt-2 text-lg font-bold text-azul">{m.titulo}</div>
               <div className="text-sm text-niebla">{m.descripcion}</div>
               <Progreso p={m.prog} />
-              <div className="mt-1.5 flex justify-between text-xs"><span className={m.prog >= 1 ? "font-bold text-verde-t" : "text-niebla"}>{m.prog >= 1 ? "✅ Cumplida" : `${Math.round(m.prog * 100)}%`}</span><span className="font-semibold text-dorado-texto">🎁 {m.premio}</span></div>
+              <div className="mt-1.5 flex justify-between text-xs"><span className={m.prog >= 1 ? "font-bold text-verde-t" : "text-niebla"}>{m.prog >= 1 ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="anim-pop size-3.5" aria-hidden /> Cumplida</span> : `${Math.round(m.prog * 100)}%`}</span><span className="font-semibold text-dorado-texto">🎁 {m.premio}</span></div>
             </div>
           ))}
         </div>

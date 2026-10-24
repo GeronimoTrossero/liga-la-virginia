@@ -1,6 +1,7 @@
 "use client";
 import { motion, AnimatePresence } from "framer-motion";
 import { KPIS, fmtPts, type KpiKey, type Nivel, type Semaforo } from "@/lib/scoring";
+import { Lock } from "lucide-react";
 import { SEM_COLOR } from "./ui";
 
 export type CartaProps = {
@@ -56,7 +57,7 @@ export function Carta(p: CartaProps) {
               </motion.div>
             </AnimatePresence>
             <div className={`mt-1.5 inline-block rounded-[4px] font-bold uppercase tracking-[0.16em] ${ETIQUETA[p.nivel]} ${sm ? "px-1.5 py-0.5 text-[8px]" : "px-2 py-1 text-[10px]"}`}>
-              {p.nivel}{p.bloqueado ? " 🔒" : ""}
+              {p.nivel}{p.bloqueado && <Lock className="ml-1 inline size-[1.1em] align-[-0.15em]" aria-label="bloqueado" />}
             </div>
           </div>
           {p.rank !== undefined && (
@@ -94,7 +95,7 @@ export function Carta(p: CartaProps) {
         </div>
 
         {p.bloqueado && !sm && (
-          <div className="mt-auto rounded-md bg-tinta/90 px-2 py-1.5 text-center text-[11px] font-semibold text-white">🔒 {p.motivo}</div>
+          <div className="mt-auto rounded-md bg-tinta/90 px-2 py-1.5 text-center text-[11px] font-semibold text-white"><Lock className="mr-1 inline size-3 align-[-0.1em]" aria-hidden />{p.motivo}</div>
         )}
       </div>
     </div>
