@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAutomationLog, getBoards } from "@/lib/data";
+import { getBoards } from "@/lib/data";
 import { groupBy, promedio, type Ranked } from "@/lib/board";
 import { MES_ACTUAL, MESES, nombreMes } from "@/lib/config";
 import { PuestoCelda, PuestoMesProvider, PuestoMesSelect, type PuestoHist } from "./PuestoMes";
@@ -25,13 +25,12 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
       const r = porMes.get(m)!.get(id);
       return { mes: m, label: nombreMes(m, true), rank: r?.rank ?? null, delta: r?.deltaRank ?? null };
     });
-  const [logs, game, misionKey] = await Promise.all([getAutomationLog(team.map((x) => x.id)), getGame(), getMisionEquipoKey(nombre)]);
+  const [game, misionKey] = await Promise.all([getGame(), getMisionEquipoKey(nombre)]);
   const mEq = misionEquipo(misionKey);
   const progEq = mEq.progreso(team);
   const enRiesgo = team.flatMap((x) => RACHA_KPIS.filter((k) => game.vendors.get(x.id)!.rachas[k].estado === "riesgo").map((k) => ({ x, k, r: game.vendors.get(x.id)!.rachas[k] }))).sort((a, b) => b.r.meses - a.r.meses);
   const mvps = [...new Set(team.map((x) => x.sucursal))].map((s) => game.mvpSucursal.get(s)).filter((m) => m && team.some((x) => x.id === m.id));
   const esDT = game.dtDelMes?.supervisor === nombre;
-  const byId = new Map(team.map((x) => [x.id, x]));
 
   // Puesto del equipo entre todos los equipos del mismo nivel (por puntaje promedio)
   const equipos = [...groupBy(board, (x) => x.supervisor).entries()]
@@ -54,8 +53,6 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
   for (const x of caidas) alertas.push({ c: "rojo", t: `${x.nombre} cayó ${-(x.deltaRank ?? 0)} puestos` });
   for (const x of subidas.slice(0, 3)) alertas.push({ c: "verde", t: `${x.nombre} subió ${x.deltaRank} puestos` });
 
-  const pagos = logs.filter((l) => l.estado === "pagado").length;
-  const recordatorios = logs.filter((l) => l.tipo === "recordatorio_cobranza").length;
 
   return (
     <div className="space-y-10">
@@ -170,27 +167,6 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
         <div className="flex flex-wrap justify-center gap-4 sm:justify-start">
           {team.map((x: Ranked) => <CartaDe key={x.id} x={x} size="sm" link />)}
         </div>
-      </section>
-
-      <section className="panel p-4 sm:p-5">
-        <div className="flex flex-wrap items-end justify-between gap-2">
-          <div><div className="volanta">Agentes IA</div><h2 className="titulo text-xl">Automatizaciones</h2></div>
-          <div className="flex flex-wrap gap-4 text-sm">
-            <span><b className="cifra text-xl text-azul">{recordatorios}</b> <span className="text-niebla">recordatorios</span></span>
-            <span><b className="cifra text-xl text-verde-t">{pagos}</b> <span className="text-niebla">pagos recibidos</span></span>
-            <span><b className="cifra text-xl text-azul">{logs.filter((l) => l.tipo === "aviso_entrega").length}</b> <span className="text-niebla">entregas reprogramadas</span></span>
-          </div>
-        </div>
-        <ul className="scrollbar-thin mt-3 max-h-[300px] space-y-1.5 overflow-y-auto text-sm">
-          {logs.length === 0 && <li className="text-tenue">Sin actividad todavía este mes.</li>}
-          {logs.map((l) => (
-            <li key={l.id} className="flex items-start gap-2 border-b border-linea pb-1.5">
-              <span className={`chip mt-0.5 shrink-0 uppercase ${l.estado === "pagado" ? "bg-verde-s text-verde-t" : "bg-azul-suave text-azul"}`}>{l.estado}</span>
-              <span className="shrink-0 font-semibold text-tinta">{byId.get(l.vendedor_id ?? "")?.nombre}</span>
-              <span className="truncate text-niebla">{l.mensaje.split("\n")[0]}{l.tipo === "recordatorio_cobranza" ? " (recordatorio)" : ""}</span>
-            </li>
-          ))}
-        </ul>
       </section>
     </div>
   );

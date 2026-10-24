@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Carta } from "./Carta";
 import { KPI_BY_KEY, fmtPct, fmtPts, puestoPara, score, simular, aplicar, sumarDeltas, type KpiKey, type Nivel, type Raw } from "@/lib/scoring";
 import { construirPlan, potencialKpi, type Accion, type ClienteLite, type FamiliaLite, type LanzLite } from "@/lib/acciones";
-import { Camera, Check, CheckCircle2, Hand, Lock, LockOpen } from "lucide-react";
+import { plantillaDibu, waLink } from "@/lib/dibu";
+import { ArrowLeft, Camera, Check, CheckCheck, CheckCircle2, Copy, Hand, Lock, LockOpen, Send, X } from "lucide-react";
 import { SEM_COLOR, SEM_TEXTO, NIVEL_COLOR, NIVEL_BG, SectionTitle } from "./ui";
 
 export type RankRow = { id: string; nombre: string; sucursal: string; rank: number; puntaje: number; nivel: Nivel; bloqueado: boolean };
@@ -39,7 +40,7 @@ export function VendedorPanel(p: Props) {
       router.refresh();
     });
   }
-  const [dibu, setDibu] = useState<{ loading: boolean; mensaje?: string; url?: string; error?: string; fuente?: string } | null>(null);
+  const [dibu, setDibu] = useState<{ comercio?: string; telefono?: string; mensaje?: string; url?: string; error?: string } | null>(null);
 
   const plan = useMemo(() => construirPlan(p.me.raw, p.clientes, p.familias, p.lanzamientos, p.hoy), [p.me.raw, p.clientes, p.familias, p.lanzamientos, p.hoy]);
   const acciones = useMemo(() => {
@@ -76,17 +77,13 @@ export function VendedorPanel(p: Props) {
     });
   }
 
-  async function abrirDibu(a: Accion) {
+  function abrirDibu(a: Accion) {
     if (!a.clienteId || !a.dibu) return;
-    setDibu({ loading: true });
-    try {
-      const r = await fetch("/api/ai/dibu", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cliente_id: a.clienteId, tipo: a.dibu }) });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error);
-      setDibu({ loading: false, mensaje: j.mensaje, url: j.url, fuente: j.fuente });
-    } catch (e) {
-      setDibu({ loading: false, error: (e as Error).message });
-    }
+    const c = p.clientes.find((x) => x.id === a.clienteId);
+    if (!c) return setDibu({ error: "No encontré ese cliente en tu cartera." });
+    const producto = c.lanzamiento_id ? p.lanzamientos.find((l) => l.id === c.lanzamiento_id)?.producto : undefined;
+    const mensaje = plantillaDibu({ tipo: a.dibu, comercio: c.nombre_comercio, vendedor: p.me.nombre, monto: c.saldo_cc, facturas: c.facturas, vence_el: c.vence_el, producto, hoy: p.hoy });
+    setDibu({ comercio: c.nombre_comercio, telefono: c.telefono_demo, mensaje, url: waLink(c.telefono_demo, mensaje) });
   }
 
   const puntos = s.puntaje - actual.puntaje;
@@ -245,26 +242,65 @@ export function VendedorPanel(p: Props) {
           <motion.div key="dibu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-azul-hondo/60 p-4 backdrop-blur-sm" onClick={() => setDibu(null)}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} role="dialog" aria-modal="true" aria-label="Comodín Dibu" className="panel w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
               <div className="bg-sol px-5 py-3 text-azul"><div className="text-[11px] font-bold uppercase tracking-[0.22em]">Asistente de mensajes</div><div className="flex items-center gap-2 text-lg font-bold"><Hand className="anim-balanceo size-5" aria-hidden /> Comodín Dibu</div></div>
-              <div className="p-5">
-              <div className="mb-3 text-xs text-niebla">Revisalo y mandalo vos desde tu WhatsApp.</div>
-              {dibu.loading && <div className="py-8 text-center text-niebla">Atajando el mensaje…</div>}
+              <div className="p-4">
               {dibu.error && <div className="rounded-lg bg-rojo-s px-3 py-2 text-sm text-rojo-t">{dibu.error}</div>}
-              {dibu.mensaje && (
-                <>
-                  <div className="whitespace-pre-wrap rounded-xl rounded-tl-none bg-[#005c4b] p-3 text-sm text-white shadow">{dibu.mensaje}</div>
-                  <div className="mt-1 text-right text-[10px] text-tenue">{dibu.fuente === "ia" ? "redactado con IA" : "plantilla La Virginia"}</div>
-                  <div className="mt-4 flex gap-2">
-                    <a href={dibu.url} target="_blank" rel="noreferrer" className="btn btn-azul flex-1">Abrir WhatsApp ›</a>
-                    <button onClick={() => navigator.clipboard?.writeText(dibu.mensaje!)} className="btn btn-linea">Copiar</button>
-                    <button onClick={() => setDibu(null)} className="btn btn-linea">Cerrar</button>
-                  </div>
-                </>
-              )}
+              {dibu.mensaje && <WhatsAppPreview comercio={dibu.comercio!} telefono={dibu.telefono!} mensaje={dibu.mensaje} url={dibu.url!} onClose={() => setDibu(null)} />}
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function WhatsAppPreview({ comercio, telefono, mensaje, url, onClose }: { comercio: string; telefono: string; mensaje: string; url: string; onClose: () => void }) {
+  const [enviado, setEnviado] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+  const hora = new Date().toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+  const inicial = comercio.trim().charAt(0).toUpperCase();
+  return (
+    <div>
+      <div className="overflow-hidden rounded-2xl border border-linea shadow-sm">
+        <div className="flex items-center gap-3 bg-[#075e54] px-3 py-2.5 text-white">
+          <ArrowLeft className="size-4 opacity-80" aria-hidden />
+          <div className="grid size-9 place-items-center rounded-full bg-white/20 text-sm font-bold" aria-hidden>{inicial}</div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-sm font-semibold">{comercio}</div>
+            <div className="text-[11px] opacity-80">{enviado ? "en línea" : `+${telefono.replace(/\D/g, "")}`}</div>
+          </div>
+        </div>
+        <div className="flex min-h-[220px] flex-col justify-end gap-2 bg-[#efeae2] p-3" style={{ backgroundImage: "radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px)", backgroundSize: "14px 14px" }}>
+          <div className="mx-auto rounded-md bg-white/80 px-2 py-0.5 text-[10px] font-semibold uppercase text-[#54656f]">Hoy</div>
+          <AnimatePresence mode="wait">
+            {enviado ? (
+              <motion.div key="env" initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ type: "spring", stiffness: 260, damping: 22 }} className="ml-auto max-w-[88%] rounded-lg rounded-tr-none bg-[#d9fdd3] px-2.5 pb-1 pt-1.5 text-[13px] leading-relaxed text-[#111b21] shadow-sm">
+                <div className="whitespace-pre-wrap">{mensaje}</div>
+                <div className="mt-0.5 flex items-center justify-end gap-1 text-[10px] text-[#667781]">
+                  {hora}
+                  <motion.span initial={{ color: "#8696a0" }} animate={{ color: "#53bdeb" }} transition={{ delay: 0.9 }}><CheckCheck className="size-3.5" aria-label="leído" /></motion.span>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div key="borr" exit={{ opacity: 0, y: -8 }} className="text-center text-xs text-[#54656f]">Así le va a llegar a tu cliente</motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        <div className="flex items-end gap-2 bg-[#f0f2f5] p-2">
+          <div className="scrollbar-thin max-h-28 min-w-0 flex-1 overflow-y-auto whitespace-pre-wrap rounded-2xl bg-white px-3 py-2 text-[13px] leading-relaxed text-[#111b21]">
+            {enviado ? <span className="text-[#8696a0]">Escribí un mensaje</span> : mensaje}
+          </div>
+          <motion.button whileTap={{ scale: 0.88 }} onClick={() => setEnviado(true)} disabled={enviado} className="grid size-10 shrink-0 place-items-center rounded-full bg-[#00a884] text-white disabled:opacity-50" aria-label="Simular envío">
+            <Send className="size-4" aria-hidden />
+          </motion.button>
+        </div>
+      </div>
+      <div className="mt-2 text-center text-[11px] text-tenue">{enviado ? "Mensaje simulado: no se envió a nadie." : "Tocá el avión para ver cómo se envía."}</div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button onClick={() => { navigator.clipboard?.writeText(mensaje); setCopiado(true); }} className="btn btn-linea flex-1"><Copy className="mr-1 inline size-4" aria-hidden />{copiado ? "Copiado" : "Copiar"}</button>
+        <a href={url} target="_blank" rel="noreferrer" className="btn btn-linea flex-1">Abrir en WhatsApp</a>
+        <button onClick={onClose} className="btn btn-azul" aria-label="Cerrar"><X className="size-4" aria-hidden /></button>
+      </div>
     </div>
   );
 }
