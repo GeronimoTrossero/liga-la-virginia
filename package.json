@@ -10,7 +10,8 @@
     "migrate": "tsx scripts/migrate.ts",
     "seed": "tsx scripts/seed.ts",
     "validate": "tsx scripts/validate.ts",
-    "test": "tsx scripts/test-scoring.ts"
+    "test": "tsx scripts/test-scoring.ts",
+    "dev:local": "node --use-system-ca node_modules/next/dist/bin/next dev"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",

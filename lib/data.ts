@@ -119,7 +119,7 @@ export async function getFiguritas(vendedorId?: string): Promise<Figurita[]> {
 
 export type LogRow = { id: number; tipo: string; vendedor_id: string | null; cliente_id: string | null; canal: string; mensaje: string; estado: string; created_at: string };
 export async function getAutomationLog(vendedorIds?: string[]): Promise<LogRow[]> {
-  let q = db().from("automation_log").select("*").order("created_at", { ascending: false }).limit(200);
+  let q = db().from("automation_log").select("*").order("id", { ascending: false }).limit(200);
   if (vendedorIds) q = q.in("vendedor_id", vendedorIds);
   const { data, error } = await q;
   if (error) throw error;

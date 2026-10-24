@@ -172,11 +172,12 @@ async function main() {
     let pend = raw.cobros_mes - raw.cobros_en_plazo;
     const cobros: { facturas: number; vence: number; saldo: number }[] = [];
     while (pend > 0) {
-      const f = Math.min(pend, x.id === DEMO_VENDEDOR && cobros.length < 3 ? 3 : int(r, 1, 4));
-      cobros.push({ facturas: f, vence: int(r, -10, 10), saldo: int(r, 40, 400) * 1000 });
+      const esDemo = x.id === DEMO_VENDEDOR;
+      const f = Math.min(pend, esDemo && cobros.length < 3 ? [3, 4, 3][cobros.length] : int(r, 1, 4));
+      cobros.push({ facturas: f, vence: esDemo ? int(r, -7, 10) : int(r, -10, 10), saldo: int(r, 40, 400) * 1000 });
       pend -= f;
     }
-    if (x.id === DEMO_VENDEDOR) { cobros[0].vence = -6; cobros[1].vence = -3; cobros[2].vence = 2; cobros[0].saldo = 285000; cobros[1].saldo = 162500; cobros[2].saldo = 318000; }
+    if (x.id === DEMO_VENDEDOR) { cobros[0].vence = -10; cobros[1].vence = -9; cobros[2].vence = -8; cobros[0].saldo = 285000; cobros[1].saldo = 162500; cobros[2].saldo = 318000; }
     for (const c of cobros) clientes.push(base({ saldo_cc: c.saldo, facturas: c.facturas, vence_el: addDays(c.vence), pagado: false }));
     // Sin relevar
     for (let i = 0; i < raw.encuestas_asignadas - raw.encuestas_realizadas; i++) clientes.push(base({ relevado: false }));

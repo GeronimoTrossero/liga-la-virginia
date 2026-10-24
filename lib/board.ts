@@ -4,7 +4,7 @@ export type VendedorInfo = { id: string; nombre: string; sucursal: string; regio
 export type Entry = VendedorInfo & { raw: Raw; s: Score };
 export type Ranked = Entry & {
   rank: number; rankSucursal: number; rankTipo: number; rankKpi: Record<KpiKey, number>;
-  prevRank: number | null; deltaRank: number | null; prevPuntaje: number | null;
+  prevRank: number | null; deltaRank: number | null; prevPuntaje: number | null; prevCumpl: Record<KpiKey, number> | null;
 };
 
 function rankBy<T>(list: T[], cmp: (a: T, b: T) => number, set: (x: T, r: number) => void) {
@@ -15,7 +15,7 @@ function rankBy<T>(list: T[], cmp: (a: T, b: T) => number, set: (x: T, r: number
 export function rankear(entries: (VendedorInfo & { raw: Raw })[], prev?: (VendedorInfo & { raw: Raw })[]): Ranked[] {
   const out: Ranked[] = entries.map((e) => ({
     ...e, s: score(e.raw), rank: 0, rankSucursal: 0, rankTipo: 0, rankKpi: {} as Record<KpiKey, number>,
-    prevRank: null, deltaRank: null, prevPuntaje: null,
+    prevRank: null, deltaRank: null, prevPuntaje: null, prevCumpl: null,
   }));
   const byPts = (a: Ranked, b: Ranked) => b.s.puntaje - a.s.puntaje || a.id.localeCompare(b.id);
   rankBy(out, byPts, (x, r) => (x.rank = r));
@@ -26,7 +26,7 @@ export function rankear(entries: (VendedorInfo & { raw: Raw })[], prev?: (Vended
     const p = new Map(rankear(prev).map((x) => [x.id, x]));
     for (const x of out) {
       const px = p.get(x.id);
-      if (px) { x.prevRank = px.rank; x.deltaRank = px.rank - x.rank; x.prevPuntaje = px.s.puntaje; }
+      if (px) { x.prevRank = px.rank; x.deltaRank = px.rank - x.rank; x.prevPuntaje = px.s.puntaje; x.prevCumpl = px.s.cumpl; }
     }
   }
   return out.sort((a, b) => a.rank - b.rank);
