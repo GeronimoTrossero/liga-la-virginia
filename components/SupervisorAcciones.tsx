@@ -10,6 +10,7 @@ export function ReconocerBtn({ vendedorId, nombre }: { vendedorId: string; nombr
   const [open, setOpen] = useState(false);
   const [msg, setMsg] = useState(FRASES[0]);
   const [ok, setOk] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   if (ok) return <span className="anim-pop inline-flex items-center gap-1 text-xs font-bold text-verde-t"><Check className="size-3.5" aria-hidden /> enviado</span>;
   return (
@@ -21,7 +22,8 @@ export function ReconocerBtn({ vendedorId, nombre }: { vendedorId: string; nombr
           <select value={msg} onChange={(e) => setMsg(e.target.value)} className="campo w-full text-xs" aria-label="Mensaje">
             {FRASES.map((f) => <option key={f}>{f}</option>)}
           </select>
-          <button disabled={pending} onClick={() => start(async () => { await reconocer(vendedorId, msg); setOk(true); setOpen(false); })} className="btn btn-sm btn-azul mt-2 w-full">Enviar reconocimiento</button>
+          <button disabled={pending} onClick={() => start(async () => { const r = await reconocer(vendedorId, msg); if (r.ok) { setOk(true); setOpen(false); } else setError(r.error); })} className="btn btn-sm btn-azul mt-2 w-full">Enviar reconocimiento</button>
+          {error && <p role="alert" className="mt-2 text-xs text-rojo-t">{error}</p>}
         </div>
       )}
     </span>
@@ -30,11 +32,15 @@ export function ReconocerBtn({ vendedorId, nombre }: { vendedorId: string; nombr
 
 export function ElegirMision({ opciones, actual, editable }: { opciones: { key: string; titulo: string; icono: string }[]; actual: string; editable: boolean }) {
   const [pending, start] = useTransition();
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   if (!editable) return null;
   return (
-    <select disabled={pending} value={actual} onChange={(e) => start(async () => { await elegirMisionEquipo(e.target.value); router.refresh(); })} className="campo w-full max-w-full sm:w-auto" aria-label="Elegir misión colectiva">
-      {opciones.map((o) => <option key={o.key} value={o.key}>{o.titulo}</option>)}
-    </select>
+    <div className="flex flex-col gap-1">
+      <select disabled={pending} value={actual} onChange={(e) => { const key = e.target.value; start(async () => { const r = await elegirMisionEquipo(key); setError(r.ok ? null : r.error); router.refresh(); }); }} className="campo w-full max-w-full sm:w-auto" aria-label="Elegir misión colectiva">
+        {opciones.map((o) => <option key={o.key} value={o.key}>{o.titulo}</option>)}
+      </select>
+      {error && <p role="alert" className="text-xs text-rojo-t">{error}</p>}
+    </div>
   );
 }
