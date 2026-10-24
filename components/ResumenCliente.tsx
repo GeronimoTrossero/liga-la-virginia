@@ -58,7 +58,7 @@ export function RankingComercial({ rows, meId, rankSucursal, totalSucursal, sucu
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-lg bg-fondo px-3 py-2">
-          {arriba ? <>Al <b>#{arriba.rank}</b> le faltan <b className="cifra text-sm text-azul">{fmtPts(arriba.puntaje - me.puntaje)}</b> pts</> : <b className="text-verde-t">Sos el #1 🏆</b>}
+          {arriba ? <>Estás a <b className="cifra text-sm text-azul">{fmtPts(arriba.puntaje - me.puntaje)}</b> pts del <b>#{arriba.rank}</b></> : <b className="text-verde-t">Sos el #1 🏆</b>}
         </div>
         <div className="rounded-lg bg-fondo px-3 py-2 text-right">
           {abajo ? <>Le sacás <b className="cifra text-sm text-azul">{fmtPts(me.puntaje - abajo.puntaje)}</b> pts al <b>#{abajo.rank}</b></> : "Último puesto"}
