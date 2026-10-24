@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getAutomationLog, getBoard, getClientes, getFamilias, getGame, getLanzamientos, getMisionEquipoKey, getReconocimientos } from "@/lib/data";
-import { DEMO_TODAY, MES_ACTUAL, nombreMes } from "@/lib/config";
+import { DEMO_TODAY, MES_ACTUAL, MESES, nombreMes } from "@/lib/config";
 import { misionesDelMes, progresoIndividual } from "@/lib/missions";
 import { misionEquipo } from "@/lib/game";
 import { requireSession, puedeVerVendedor } from "@/lib/auth";
@@ -10,14 +10,28 @@ import { VendedorPanel } from "@/components/VendedorPanel";
 import { Automatizacion } from "@/components/Automatizacion";
 import { Rachas, RiesgoBanners, TemporadaCard, TuLiga } from "@/components/Juego";
 import { Progreso, SectionTitle } from "@/components/ui";
+import { EncabezadoVendedor, VentasKg } from "@/components/Resumen";
+import { PeriodoSelect, RankingComercial } from "@/components/ResumenCliente";
 
-export default async function VendedorPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function VendedorPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ mes?: string }> }) {
   const { id } = await params;
+  const sp = await searchParams;
   const s = await requireSession();
   const board = await getBoard(MES_ACTUAL);
   const me = board.find((x) => x.id === id);
   if (!me) notFound();
   if (!puedeVerVendedor(s, me)) redirect(homeDe(s));
+
+  // Período consultado (por defecto, el mes en curso). Arriba y en los 7 indicadores manda este mes;
+  // rachas, temporada, liga, agentes y misiones siguen siendo del mes en curso.
+  const pedido = sp.mes && MESES.includes(sp.mes) ? sp.mes : MES_ACTUAL;
+  const boardMes = pedido === MES_ACTUAL ? board : await getBoard(pedido);
+  const yo = boardMes.find((x) => x.id === id) ?? me;
+  const mes = yo === me ? MES_ACTUAL : pedido;
+  const tablaMes = yo === me ? board : boardMes;
+  const cerrado = mes !== MES_ACTUAL;
+  const [apellido, ...nombresPila] = me.nombre.split(" ");
+  const nombreNatural = `${nombresPila.join(" ")} ${apellido}`.trim();
 
   const [game, clientes, familias, lanzamientos, logs, recos, misionKey] = await Promise.all([
     getGame(), getClientes(id), getFamilias(id), getLanzamientos(), getAutomationLog([id]), getReconocimientos([id]), getMisionEquipoKey(me.supervisor),
@@ -26,7 +40,6 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
   const div = game.divisiones[g.division];
   const comercio = new Map(clientes.map((c) => [c.id, c.nombre_comercio]));
   const nombres = new Map(board.map((x) => [x.id, { nombre: x.nombre, sucursal: x.sucursal }]));
-  const suc = board.filter((x) => x.sucursal === me.sucursal);
   const equipo = board.filter((x) => x.supervisor === me.supervisor);
   const mEq = misionEquipo(misionKey);
   const progEq = mEq.progreso(equipo);
@@ -36,10 +49,31 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
 
   return (
     <div className="space-y-10">
-      <div className="border-b border-linea pb-5">
-        <div className="volanta">{nombreMes(MES_ACTUAL)} · hoy 24/10 · {diasHabilesRestantes(DEMO_TODAY)} días hábiles para el cierre</div>
-        <h1 className="titulo mt-1 text-3xl sm:text-4xl">{me.nombre}</h1>
-        <div className="mt-1 text-sm text-niebla">{me.sucursal} · {me.tipo} · Gerente: {me.supervisor}</div>
+      <div className="space-y-4">
+        <EncabezadoVendedor
+          titulo={s.rol === "VENDEDOR" ? `Hola, ${nombreNatural}` : nombreNatural}
+          sucursal={`Sucursal ${me.sucursal}`}
+          detalle={`${me.tipo} · Gerente: ${me.supervisor}${s.rol === "VENDEDOR" ? "" : " · vista del gerente"}`}
+          periodo={
+            <PeriodoSelect
+              meses={[...MESES].reverse().map((m) => ({ value: m, label: m === MES_ACTUAL ? `${nombreMes(m)} (en curso)` : nombreMes(m) }))}
+              actual={mes}
+              porDefecto={MES_ACTUAL}
+              ayuda={cerrado ? "Período cerrado" : `Hoy 24/10 · ${diasHabilesRestantes(DEMO_TODAY)} días hábiles para el cierre`}
+            />
+          }
+        />
+        <section className="grid grid-cols-[minmax(0,1fr)] items-stretch gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]" aria-label="Ventas y ranking">
+          <VentasKg vendido={yo.raw.kilos_vendidos} objetivo={yo.raw.kilos_objetivo} mes={nombreMes(mes)} />
+          <RankingComercial
+            rows={tablaMes.map((x) => ({ id: x.id, nombre: x.nombre, sucursal: x.sucursal, rank: x.rank, puntaje: x.s.puntaje, nivel: x.s.nivel, bloqueado: x.s.bloqueado }))}
+            meId={id}
+            rankSucursal={yo.rankSucursal}
+            totalSucursal={tablaMes.filter((x) => x.sucursal === yo.sucursal).length}
+            sucursal={yo.sucursal}
+            deltaRank={yo.deltaRank}
+          />
+        </section>
       </div>
 
       {(recos.length > 0 || mvp?.id === id) && (
@@ -56,11 +90,10 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
       <RiesgoBanners g={g} />
 
       <VendedorPanel
-        me={{ id: me.id, nombre: me.nombre, sucursal: me.sucursal, tipo: me.tipo, raw: me.raw, rank: me.rank, rankSucursal: me.rankSucursal, deltaRank: me.deltaRank, prevCumpl: me.prevCumpl }}
-        total={board.length}
-        totalSucursal={suc.length}
-        otros={board.filter((x) => x.id !== id).map((x) => x.s.puntaje)}
-        ranking={board.map((x) => ({ id: x.id, nombre: x.nombre, sucursal: x.sucursal, rank: x.rank, puntaje: x.s.puntaje, nivel: x.s.nivel, bloqueado: x.s.bloqueado }))}
+        key={mes}
+        me={{ id: yo.id, nombre: yo.nombre, sucursal: yo.sucursal, tipo: yo.tipo, raw: yo.raw, rank: yo.rank, rankSucursal: yo.rankSucursal, deltaRank: yo.deltaRank, prevCumpl: yo.prevCumpl }}
+        otros={tablaMes.filter((x) => x.id !== id).map((x) => x.s.puntaje)}
+        cerrado={cerrado}
         clientes={clientes}
         familias={familias}
         lanzamientos={lanzamientos}

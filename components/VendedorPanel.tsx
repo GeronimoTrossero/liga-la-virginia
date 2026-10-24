@@ -1,21 +1,18 @@
 "use client";
-import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { subirFotoGondola } from "@/app/actions";
 import { motion, AnimatePresence } from "framer-motion";
 import { Carta } from "./Carta";
-import { KPI_BY_KEY, fmtPct, fmtPts, puestoPara, score, simular, aplicar, sumarDeltas, type KpiKey, type Nivel, type Raw } from "@/lib/scoring";
+import { KPI_BY_KEY, fmtPct, fmtPts, puestoPara, score, simular, aplicar, sumarDeltas, type KpiKey, type Raw } from "@/lib/scoring";
 import { construirPlan, potencialKpi, type Accion, type ClienteLite, type FamiliaLite, type LanzLite } from "@/lib/acciones";
 import { SEM_COLOR, SEM_TEXTO, NIVEL_COLOR, NIVEL_BG, SectionTitle } from "./ui";
 
-export type RankRow = { id: string; nombre: string; sucursal: string; rank: number; puntaje: number; nivel: Nivel; bloqueado: boolean };
-
 type Props = {
   me: { id: string; nombre: string; sucursal: string; tipo: string; raw: Raw; rank: number; rankSucursal: number; deltaRank: number | null; prevCumpl: Record<KpiKey, number> | null };
-  total: number;
-  totalSucursal: number;
   otros: number[];
-  ranking: RankRow[];
+  /** Período ya cerrado: se muestran sus indicadores, pero el plan de acción es del mes en curso. */
+  cerrado?: boolean;
   clientes: ClienteLite[];
   familias: FamiliaLite[];
   lanzamientos: LanzLite[];
@@ -93,10 +90,12 @@ export function VendedorPanel(p: Props) {
   const subeNivel = !desbloquea && s.nivel !== actual.nivel;
 
   return (
-    <div className="space-y-8">
-      {/* ---------- Carta + posición ---------- */}
-      <section className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 md:grid-cols-[auto_minmax(0,1fr)]">
-        <div className="flex flex-col items-center gap-3">
+    <div className="space-y-10">
+      {/* ---------- Mejorá tu carta: la carta reacciona a las acciones tildadas ---------- */}
+      <section>
+        <SectionTitle volanta="Plan de acción" sub={p.cerrado ? "Período cerrado: así terminaron tus 7 indicadores. El plan de acción se arma sobre el mes en curso." : "Tildá acciones y mirá cómo sube tu carta. Ordenado por puntos posibles."}>Mejorá tu carta</SectionTitle>
+        <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 lg:grid-cols-[auto_minmax(0,1fr)]">
+        <div className="flex flex-col items-center gap-3 lg:sticky lg:top-24">
           <Carta size="lg" nombre={p.me.nombre} sucursal={p.me.sucursal} tipo={p.me.tipo} puntaje={s.puntaje} nivel={s.nivel} cumpl={s.cumpl} semaforos={s.semaforos} flechas={checked.size ? undefined : flechas} rank={rankSim} rankSucursal={p.me.rankSucursal} bloqueado={s.bloqueado} motivo={s.motivoBloqueo} />
           <AnimatePresence>
             {checked.size > 0 && (
@@ -111,29 +110,13 @@ export function VendedorPanel(p: Props) {
               </motion.div>
             )}
           </AnimatePresence>
+          {actual.bloqueado && checked.size === 0 && (
+            <div className="w-[280px] rounded-lg border-l-4 border-ambar bg-ambar-s px-3 py-2 text-sm text-ambar-t">
+              🔒 {actual.motivoBloqueo}. Con {fmtPts(actual.puntaje)} pts serías <b>{actual.nivelSinCandado}</b>{p.cerrado ? "." : ": subí Cobranzas a amarillo y lo desbloqueás."}
+            </div>
+          )}
         </div>
 
-        <div className="space-y-4">
-          <div className="panel p-4">
-            <div className="volanta">Mi posición</div>
-            <div className="cifra mt-1 text-5xl leading-none text-azul">
-              #{p.me.rank} <span className="text-xl font-semibold text-tenue">de {p.total}</span>
-            </div>
-            <div className="mt-1 text-sm text-niebla">
-              #{p.me.rankSucursal} en {p.me.sucursal} (de {p.totalSucursal}) ·{" "}
-              {p.me.deltaRank === null || p.me.deltaRank === 0 ? "mismo puesto que el mes pasado" : p.me.deltaRank > 0 ? <span className="font-semibold text-verde-t">subiste {p.me.deltaRank} puestos</span> : <span className="font-semibold text-rojo-t">bajaste {-p.me.deltaRank} puestos</span>}
-            </div>
-            {actual.bloqueado && <div className="mt-3 rounded-lg border-l-4 border-ambar bg-ambar-s px-3 py-2 text-sm text-ambar-t">🔒 {actual.motivoBloqueo}. Con {fmtPts(actual.puntaje)} pts serías <b>{actual.nivelSinCandado}</b>: subí Cobranzas a amarillo y lo desbloqueás.</div>}
-          </div>
-          <RankingList rows={p.ranking} meId={p.me.id} />
-        </div>
-      </section>
-
-      {p.extra}
-
-      {/* ---------- Mejorá tu carta ---------- */}
-      <section>
-        <SectionTitle volanta="Plan de acción" sub="Tildá acciones y mirá cómo sube tu carta. Ordenado por puntos posibles.">Mejorá tu carta</SectionTitle>
         <div className="space-y-2">
           {barras.map(({ k, pts, cumplMax }) => {
             const def = KPI_BY_KEY[k];
@@ -144,7 +127,7 @@ export function VendedorPanel(p: Props) {
             const nSel = pk.grupos.flatMap((g) => g.acciones).filter((a) => checked.has(a.id)).length;
             return (
               <div key={k} className={`panel overflow-hidden transition ${open ? "!border-azul/40 shadow-md" : ""}`}>
-                <button className="w-full p-3 text-left hover:bg-fondo/60 sm:p-4" onClick={() => setAbierto(open ? null : k)} aria-expanded={open}>
+                <button className={`w-full p-3 text-left sm:p-4 ${p.cerrado ? "cursor-default" : "hover:bg-fondo/60"}`} onClick={() => !p.cerrado && setAbierto(open ? null : k)} aria-expanded={p.cerrado ? undefined : open}>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                       <span className="inline-block h-3 w-3 shrink-0 rounded-full" style={{ background: SEM_COLOR[actual.semaforos[k]] }} aria-hidden />
@@ -152,14 +135,14 @@ export function VendedorPanel(p: Props) {
                       <span className="font-semibold text-tinta">{def.nombre}</span>
                       {nSel > 0 && <span className="chip bg-azul text-white">{nSel} ✓</span>}
                     </div>
-                    <span className={`chip shrink-0 ${pts > 0.05 ? "bg-sol-suave text-azul" : "bg-fondo text-tenue"}`}>+{fmtPts(pts)} pts posibles</span>
+                    {!p.cerrado && <span className={`chip shrink-0 ${pts > 0.05 ? "bg-sol-suave text-azul" : "bg-fondo text-tenue"}`}>+{fmtPts(pts)} pts posibles</span>}
                   </div>
                   <Barra c={c} cs={cs} cMax={cumplMax} color={SEM_COLOR[actual.semaforos[k]]} />
                   <div className="mt-1 flex justify-between text-xs text-niebla">
                     <span>Real {fmtPct(actual.reales[k])} · objetivo {fmtPct(def.objetivo, 0)} {def.sentido === "down" ? "(menos es mejor)" : ""}</span>
                     <span>Cumpl. {Math.round(c * 100)}%{cs !== c && <b className="text-azul"> → {Math.round(cs * 100)}%</b>}</span>
                   </div>
-                  <div className="mt-1 text-xs font-semibold text-azul-web">{pk.resumen} <span aria-hidden>{open ? "▴" : "▾"}</span></div>
+                  {!p.cerrado && <div className="mt-1 text-xs font-semibold text-azul-web">{pk.resumen} <span aria-hidden>{open ? "▴" : "▾"}</span></div>}
                 </button>
                 <AnimatePresence initial={false}>
                   {open && (
@@ -206,7 +189,10 @@ export function VendedorPanel(p: Props) {
             );
           })}
         </div>
+        </div>
       </section>
+
+      {p.extra}
 
       {p.liga}
 
@@ -276,32 +262,6 @@ function Barra({ c, cs, cMax, color }: { c: number; cs: number; cMax: number; co
       <motion.div className="absolute inset-y-0 left-0 rounded-full" style={{ background: color }} initial={false} animate={{ width: w(cs) }} transition={{ type: "spring", stiffness: 120, damping: 20 }} />
       {cs > c && <div className="absolute inset-y-0 left-0 rounded-full bg-black/20" style={{ width: w(c) }} />}
       <div className="absolute inset-y-0 w-0.5 bg-azul" style={{ left: w(1) }} title="Objetivo" />
-    </div>
-  );
-}
-
-function RankingList({ rows, meId }: { rows: RankRow[]; meId: string }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const el = ref.current?.querySelector<HTMLElement>("[data-me]");
-    if (el && ref.current) ref.current.scrollTop = el.offsetTop - ref.current.clientHeight / 2 + el.clientHeight / 2;
-  }, [rows]);
-  return (
-    <div className="panel p-2">
-      <div className="flex justify-between px-2 pb-1 pt-1">
-        <span className="volanta">Ranking completo</span>
-        <span className="text-[11px] font-semibold text-tenue">pts</span>
-      </div>
-      <div ref={ref} className="scrollbar-thin relative h-[300px] overflow-y-auto">
-        {rows.map((r) => (
-          <div key={r.id} data-me={r.id === meId ? "" : undefined} className={`flex items-center gap-3 rounded-md px-2 py-1.5 text-sm ${r.id === meId ? "bg-sol font-bold text-azul" : "odd:bg-fondo/60"}`}>
-            <span className="cifra w-8 text-right opacity-70">{r.rank}</span>
-            <span className="min-w-0 flex-1 truncate">{r.nombre} <span className="text-xs font-normal opacity-70">· {r.sucursal}</span></span>
-            <span className="text-xs font-semibold" style={{ color: NIVEL_COLOR[r.nivel] }}>{r.bloqueado ? "🔒" : ""}{r.nivel}</span>
-            <span className="cifra w-12 text-right">{fmtPts(r.puntaje)}</span>
-          </div>
-        ))}
-      </div>
     </div>
   );
 }
