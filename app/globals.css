@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-display: var(--font-display);
+  --font-sans: var(--font-body);
+  --color-noche: #05070f;
+  --color-cancha: #0b1424;
+  --color-panel: #0f1a2e;
+  --color-linea: #1d2b45;
+  --color-tiza: #e8eefc;
+  --color-niebla: #8a9bbd;
+  --color-oro: #f5c542;
+  --color-verde: #22c55e;
+  --color-amarillo: #facc15;
+  --color-rojo: #ef4444;
+  --color-diamante: #7df9ff;
+  --color-acento: #38bdf8;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -200px, rgba(56, 189, 248, 0.18), transparent 70%),
+    radial-gradient(800px 400px at 100% 0, rgba(245, 197, 66, 0.08), transparent 70%),
+    #05070f;
+  background-attachment: fixed;
+  color: #e8eefc;
+  font-family: var(--font-body), system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(20, 33, 58, 0.85), rgba(11, 20, 36, 0.85));
+  border: 1px solid #1d2b45;
+  border-radius: 1rem;
+}
+
+/* ---- Cartas por nivel ---- */
+.carta {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0 6%, 12% 0, 88% 0, 100% 6%, 100% 88%, 50% 100%, 0 88%);
+  isolation: isolate;
+}
+.carta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.carta-Bronce {
+  background: linear-gradient(160deg, #8a5a32 0%, #b98352 35%, #6b4423 70%, #4a2e17 100%);
+  color: #fff3e6;
+}
+.carta-Plata {
+  background: linear-gradient(155deg, #6b7280 0%, #e5e7eb 30%, #9ca3af 50%, #f9fafb 68%, #6b7280 100%);
+  color: #111827;
+}
+.carta-Oro {
+  background: linear-gradient(155deg, #8a6410 0%, #fde68a 28%, #d4a017 50%, #fff3b0 68%, #a77b15 100%);
+  color: #2a1d00;
+}
+.carta-Oro::after {
+  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 45%, transparent 60%);
+  background-size: 250% 100%;
+  animation: brillo 3.2s ease-in-out infinite;
+}
+.carta-Diamante {
+  background: conic-gradient(from 0deg at 50% 40%, #7df9ff, #c084fc, #f0abfc, #fde68a, #86efac, #7df9ff);
+  color: #0b1020;
+  animation: holo 6s linear infinite;
+}
+.carta-Diamante::after {
+  background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.7) 45%, transparent 65%);
+  background-size: 250% 100%;
+  animation: brillo 2.4s ease-in-out infinite;
+}
+@keyframes brillo {
+  0% { background-position: 150% 0; }
+  100% { background-position: -100% 0; }
+}
+@keyframes holo {
+  0% { filter: hue-rotate(0deg) saturate(1.1); }
+  100% { filter: hue-rotate(360deg) saturate(1.1); }
+}
+
+.glow-Diamante { box-shadow: 0 0 40px rgba(125, 249, 255, 0.45); }
+.glow-Oro { box-shadow: 0 0 36px rgba(245, 197, 66, 0.4); }
+.glow-Plata { box-shadow: 0 0 24px rgba(229, 231, 235, 0.2); }
+.glow-Bronce { box-shadow: 0 0 18px rgba(185, 131, 82, 0.2); }
+
+.fantasma {
+  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0 6px, rgba(255, 255, 255, 0.12) 6px 12px);
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #1d2b45; border-radius: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .carta-Oro::after, .carta-Diamante, .carta-Diamante::after { animation: none; }
+}
