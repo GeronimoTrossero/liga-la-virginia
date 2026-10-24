@@ -2,7 +2,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { registrarPago, resetDemo, runCobranza, agenteGondola } from "@/lib/automation";
+import { agenteGondola } from "@/lib/automation";
 import { buscarUsuario, getSession, iniciarSesion, pinOk, puedeVerVendedor, MODO_PRESENTADOR } from "@/lib/auth";
 import { COOKIE, homeDe } from "@/lib/session";
 import { supabaseAdmin, SupabaseConfigError } from "@/lib/supabase";
@@ -52,29 +52,9 @@ async function vendedorAutorizado(vendedorId: string) {
   return s;
 }
 
-// ---------- Agentes (modo simulado). Corren en el servidor; el secreto nunca llega al browser. ----------
-export async function simularPasaron5Dias(vendedorId: string) {
-  await vendedorAutorizado(vendedorId);
-  const r = await runCobranza(vendedorId);
-  revalidatePath(`/vendedor/${vendedorId}`);
-  return r;
-}
-
-export async function simularRespuestaPago(clienteId: string) {
-  await vendedorAutorizado(clienteId.split("-")[0]);
-  return registrarPago({ cliente_id: clienteId, texto: "¡Hola! Ya pagué, te mandé la transferencia 👍" });
-}
-
 export async function subirFotoGondola(vendedorId: string) {
   await vendedorAutorizado(vendedorId);
   return agenteGondola(vendedorId);
-}
-
-export async function reiniciarDemo(vendedorId: string) {
-  await vendedorAutorizado(vendedorId);
-  const r = await resetDemo(vendedorId);
-  revalidatePath(`/vendedor/${vendedorId}`);
-  return r;
 }
 
 // ---------- Gerente de equipo (rol SUPERVISOR) ----------

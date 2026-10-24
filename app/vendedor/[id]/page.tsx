@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { getAutomationLog, getBoard, getClientes, getFamilias, getGame, getLanzamientos, getMisionEquipoKey, getReconocimientos } from "@/lib/data";
+import { getBoard, getClientes, getFamilias, getGame, getLanzamientos, getMisionEquipoKey, getReconocimientos } from "@/lib/data";
 import { DEMO_TODAY, MES_ACTUAL, nombreMes } from "@/lib/config";
 import { misionesDelMes, progresoIndividual } from "@/lib/missions";
 import { misionEquipo } from "@/lib/game";
@@ -7,7 +7,6 @@ import { requireSession, puedeVerVendedor } from "@/lib/auth";
 import { homeDe } from "@/lib/session";
 import { diasHabilesRestantes } from "@/lib/acciones";
 import { VendedorPanel } from "@/components/VendedorPanel";
-import { Automatizacion } from "@/components/Automatizacion";
 import { Rachas, RiesgoBanners, TemporadaCard, TuLiga } from "@/components/Juego";
 import { Progreso, SectionTitle } from "@/components/ui";
 import { Ilus, IconoMision } from "@/components/Icono";
@@ -21,12 +20,11 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
   if (!me) notFound();
   if (!puedeVerVendedor(s, me)) redirect(homeDe(s));
 
-  const [game, clientes, familias, lanzamientos, logs, recos, misionKey] = await Promise.all([
-    getGame(), getClientes(id), getFamilias(id), getLanzamientos(), getAutomationLog([id]), getReconocimientos([id]), getMisionEquipoKey(me.supervisor),
+  const [game, clientes, familias, lanzamientos, recos, misionKey] = await Promise.all([
+    getGame(), getClientes(id), getFamilias(id), getLanzamientos(), getReconocimientos([id]), getMisionEquipoKey(me.supervisor),
   ]);
   const g = game.vendors.get(id)!;
   const div = game.divisiones[g.division];
-  const comercio = new Map(clientes.map((c) => [c.id, c.nombre_comercio]));
   const nombres = new Map(board.map((x) => [x.id, { nombre: x.nombre, sucursal: x.sucursal }]));
   const suc = board.filter((x) => x.sucursal === me.sucursal);
   const equipo = board.filter((x) => x.supervisor === me.supervisor);
@@ -75,8 +73,6 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
         }
         liga={<TuLiga key="liga" div={div} meId={id} nombres={nombres} />}
       />
-
-      <Automatizacion vendedorId={id} logs={logs.map((l) => ({ ...l, comercio: l.cliente_id ? comercio.get(l.cliente_id) : undefined }))} impagos={clientes.filter((c) => !c.pagado && c.facturas > 0).map((c) => c.id)} />
 
       <section>
         <SectionTitle volanta="Objetivos del mes">Misiones de {nombreMes(MES_ACTUAL).split(" ")[0]}</SectionTitle>
