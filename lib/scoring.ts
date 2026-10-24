@@ -34,7 +34,7 @@ const div = (a: number, b: number) => (b > 0 ? a / b : null);
 
 export const KPIS: KpiDef[] = [
   { key: "vta", abbr: "VTA", nombre: "Venta vs OV", objetivo: 1.0, sentido: "up", peso: 0.3, real: (r) => div(r.kilos_vendidos, r.kilos_objetivo) },
-  { key: "prd", abbr: "PRD", nombre: "Productividad", objetivo: 0.65, sentido: "up", peso: 0.1, real: (r) => div(r.pedidos_levantados, r.visitas_realizadas) },
+  { key: "prd", abbr: "PRD", nombre: "Efectividad de visitas", objetivo: 0.65, sentido: "up", peso: 0.1, real: (r) => div(r.pedidos_levantados, r.visitas_realizadas) },
   { key: "act", abbr: "ACT", nombre: "No compradores", objetivo: 0.15, sentido: "down", peso: 0.15, real: (r) => div(r.clientes_cartera - r.clientes_compradores, r.clientes_cartera) },
   { key: "lan", abbr: "LAN", nombre: "Últ. lanzamientos", objetivo: 0.4, sentido: "up", peso: 0.15, real: (r) => div(r.clientes_con_lanzamiento, r.clientes_compradores) },
   { key: "ent", abbr: "ENT", nombre: "No entregados", objetivo: 0.03, sentido: "down", peso: 0.1, real: (r) => div(r.pedidos_no_entregados, r.pedidos_levantados) },

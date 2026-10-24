@@ -7,6 +7,8 @@ import { KPIS, KPI_BY_KEY, fmtPts, nivelBase, type KpiKey } from "@/lib/scoring"
 import { CartaDe } from "@/components/CartaDe";
 import { LigaFiltros } from "@/components/LigaFiltros";
 import { NivelBadge, Delta, SEM_COLOR, SEM_TEXTO } from "@/components/ui";
+import { Ilus, type Ilustracion } from "@/components/Icono";
+import { Brain, Flag, Shield, Swords } from "lucide-react";
 
 const DERBIS: [string, string, string][] = [
   ["Clásico del Litoral", "Santa Fe", "Rosario"],
@@ -98,20 +100,20 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
       <section className="grid gap-4 md:grid-cols-3">
         {game.dtDelMes && (
           <Link href={`/supervisor/${encodeURIComponent(game.dtDelMes.supervisor)}`} className="panel block p-5 hover:border-azul/50 hover:shadow-md">
-            <div className="volanta">🧠 DT del Mes</div>
+            <div className="volanta flex items-center gap-1.5"><Brain className="size-4" aria-hidden /> DT del Mes</div>
             <div className="mt-1 text-2xl font-bold leading-tight text-azul">{game.dtDelMes.supervisor}</div>
             <div className="mt-1 text-sm text-niebla">Su equipo mejoró +{game.dtDelMes.mejora.toFixed(1).replace(".", ",")} pts promedio vs. el mes pasado</div>
           </Link>
         )}
         {game.cintaCapitan && (
           <div className="panel p-5">
-            <div className="volanta">🎗️ Cinta de Capitán</div>
+            <div className="volanta flex items-center gap-1.5"><Shield className="size-4" aria-hidden /> Cinta de Capitán</div>
             <div className="mt-1 text-2xl font-bold leading-tight text-azul">{game.cintaCapitan.sucursal}</div>
             <div className="mt-1 text-sm text-niebla">Cadena de {game.cintaCapitan.meses} meses seguidos por encima del promedio nacional</div>
           </div>
         )}
         <Link href="/temporada" className="panel block !border-azul/30 p-5 hover:border-azul/50 hover:shadow-md">
-          <div className="volanta">🏁 Cierre de temporada</div>
+          <div className="volanta flex items-center gap-1.5"><Flag className="size-4" aria-hidden /> Cierre de temporada</div>
           <div className="mt-1 text-2xl font-bold leading-tight text-azul">{game.temporada.nombre}</div>
           <div className="mt-1 text-sm text-niebla">Ascensos, descensos y campeones de cada división →</div>
         </Link>
@@ -131,13 +133,13 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
       {/* Destacados */}
       <section className="grid gap-4 md:grid-cols-3">
         {remontada && (
-          <Destacado icon="🚀" titulo="Remontada del mes" nombre={remontada.nombre} id={remontada.id} detalle={`Subió ${remontada.deltaRank} puestos: del #${remontada.prevRank} al #${remontada.rank}`} />
+          <Destacado icon="cohete" titulo="Remontada del mes" nombre={remontada.nombre} id={remontada.id} detalle={`Subió ${remontada.deltaRank} puestos: del #${remontada.prevRank} al #${remontada.rank}`} />
         )}
         {revelacion && (
-          <Destacado icon="✨" titulo="Revelación" nombre={revelacion.x.nombre} id={revelacion.x.id} detalle={`${fmtPts(revelacion.x.prevPuntaje!)} → ${fmtPts(revelacion.x.s.puntaje)} · cerró el ${Math.round(revelacion.r * 100)}% de la brecha a 100`} />
+          <Destacado icon="holo" titulo="Revelación" nombre={revelacion.x.nombre} id={revelacion.x.id} detalle={`${fmtPts(revelacion.x.prevPuntaje!)} → ${fmtPts(revelacion.x.s.puntaje)} · cerró el ${Math.round(revelacion.r * 100)}% de la brecha a 100`} />
         )}
         <div className="panel p-5">
-          <div className="volanta">🏟️ Clásico nacional</div>
+          <div className="volanta flex items-center gap-1.5"><Swords className="size-4" aria-hidden /> Clásico nacional</div>
           <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2 text-center">
             <div><div className="text-lg font-bold text-azul">Interior</div><div className="text-xs text-niebla">{fmtPts(ivg.pa)} pts prom.</div></div>
             <div className="rounded-lg bg-azul px-3 py-1 text-white cifra text-4xl text-azul">{ivg.ga}<span className="text-niebla">-</span>{ivg.gb}</div>
@@ -219,7 +221,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
             <Link key={a.id} href={`/vendedor/${a.id}`} className={`panel flex items-center gap-3 p-3 hover:border-sol ${i === 0 ? "!border-sol bg-sol-suave sm:col-span-2" : ""}`}>
               <span className={`w-10 text-center cifra ${i === 0 ? "text-4xl text-dorado-texto" : "text-2xl text-niebla"}`}>{i + 1}</span>
               <span className="flex-1">
-                <span className={`block font-semibold ${i === 0 ? "text-2xl font-bold text-azul" : ""}`}>{i === 0 ? "🏆 " : ""}{a.nombre}</span>
+                <span className={`flex items-center gap-2 font-semibold ${i === 0 ? "text-2xl font-bold text-azul" : ""}`}>{i === 0 && <Ilus n="balon" size={36} />}{a.nombre}</span>
                 <span className="text-xs text-niebla">{a.sucursal} · {a.meses_podio} meses en podio · mejor: {nombreMes(a.mejor_mes, true)}</span>
               </span>
               <NivelBadge nivel={nivelBase(a.puntaje_prom)} />
@@ -252,7 +254,8 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
             );
           })}
           <div className="panel !border-sol p-4">
-            <div className="volanta text-center">🏆 Copa Derbi (rodante)</div>
+            <div className="flex justify-center"><Ilus n="copa" size={56} /></div>
+            <div className="volanta text-center">Copa Derbi (rodante)</div>
             <div className="mt-2 text-center text-2xl font-bold text-azul">{copa[copa.length - 1].s.split("/")[0]}</div>
             <div className="text-center text-xs text-niebla">La tiene la sucursal #1 del mes</div>
             <div className="mt-3 flex justify-center gap-3 text-xs text-niebla">
@@ -298,7 +301,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
           {muro.map(({ m, x }) => (
             <div key={m} className="panel p-3 text-center">
               <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-dorado-texto">{nombreMes(m, true)}</div>
-              <div className="mt-1 text-2xl">🏆</div>
+              <div className="mt-1 flex justify-center"><Ilus n="copa" size={44} quieto className="ilus-hover" /></div>
               <div className="text-sm font-bold leading-tight text-tinta">{x.nombre}</div>
               <div className="text-xs text-niebla">{x.sucursal.split("/")[0]} · {fmtPts(x.s.puntaje)}</div>
             </div>
@@ -311,17 +314,19 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
         <h2 className="titulo mb-4 text-2xl">Premios</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            ["⚽", "Balón de Oro + Golden Card", "Mejor promedio anual. Carta dorada física y viaje para dos."],
-            ["🏆", "Podio del mes", "Top 3 general: orden de compra y mención en la convención."],
-            ["🚀", "Remontada", "El que más puestos sube en el mes: día libre."],
-            ["✨", "Figurita Holo", "1° en el mismo KPI 3+ meses: canjeable por beneficio a elección."],
-            ["🛡️", "Copa Derbi", "Trofeo rodante para la sucursal #1 del mes."],
-            ["🔥", "Tercer Tiempo", "Asado para la sucursal que cumple la misión colectiva."],
-          ].map(([i, t, d]) => (
-            <div key={t} className="panel p-4">
-              <div className="text-3xl">{i}</div>
+            ["balon", "Balón de Oro + Golden Card", "Mejor promedio anual. Carta dorada física y viaje para dos."],
+            ["copa", "Podio del mes", "Top 3 general: orden de compra y mención en la convención."],
+            ["cohete", "Remontada", "El que más puestos sube en el mes: día libre."],
+            ["holo", "Figurita Holo", "1° en el mismo KPI 3+ meses: canjeable por beneficio a elección."],
+            ["escudo", "Copa Derbi", "Trofeo rodante para la sucursal #1 del mes."],
+            ["asado", "Tercer Tiempo", "Asado para la sucursal que cumple la misión colectiva."],
+          ].map(([i, t, d], idx) => (
+            <div key={t} className="panel anim-entrar group flex items-start gap-4 p-4 transition-shadow hover:shadow-md" style={{ animationDelay: `${idx * 70}ms` }}>
+              <Ilus n={i as Ilustracion} size={64} className="ilus-hover" />
+              <div>
               <div className="text-lg font-bold text-azul">{t}</div>
               <div className="text-sm text-niebla">{d}</div>
+              </div>
             </div>
           ))}
         </div>
@@ -331,12 +336,15 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
   );
 }
 
-function Destacado({ icon, titulo, nombre, id, detalle }: { icon: string; titulo: string; nombre: string; id: string; detalle: string }) {
+function Destacado({ icon, titulo, nombre, id, detalle }: { icon: Ilustracion; titulo: string; nombre: string; id: string; detalle: string }) {
   return (
-    <Link href={`/vendedor/${id}`} className="panel block p-5 hover:border-azul/50 hover:shadow-md">
-      <div className="volanta">{icon} {titulo}</div>
-      <div className="mt-1 text-2xl font-bold leading-tight text-azul">{nombre}</div>
-      <div className="mt-1 text-sm text-niebla">{detalle}</div>
+    <Link href={`/vendedor/${id}`} className="panel flex items-start gap-4 p-5 hover:border-azul/50 hover:shadow-md">
+      <Ilus n={icon} size={56} />
+      <div>
+        <div className="volanta">{titulo}</div>
+        <div className="mt-1 text-2xl font-bold leading-tight text-azul">{nombre}</div>
+        <div className="mt-1 text-sm text-niebla">{detalle}</div>
+      </div>
     </Link>
   );
 }
