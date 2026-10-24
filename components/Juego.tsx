@@ -61,9 +61,8 @@ export function Rachas({ g }: { g: VendorGame }) {
           );
         })}
       </div>
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-fondo px-3 py-2 text-sm">
+      <div className="mt-3 rounded-lg bg-fondo px-3 py-2 text-sm">
         <span className="text-niebla">Racha general (VTA y COB sin rojo): <b className="cifra text-base text-tinta">{g.rachaGeneral} {g.rachaGeneral === 1 ? "mes" : "meses"}</b></span>
-        <span className="chip bg-azul text-sm text-white">×{g.multiplicador.toFixed(2).replace(".", ",")} Puntos de Liga</span>
       </div>
     </section>
   );
@@ -86,15 +85,15 @@ export function TemporadaCard({ g, nombreTemp }: { g: VendorGame; nombreTemp: st
       </div>
       <div className="mt-4 grid grid-cols-2 gap-2 text-center">
         <div className="rounded-lg bg-sol p-2.5">
-          <div className="cifra text-3xl text-azul">{g.xpTemporada}</div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-azul/80">Puntos de Liga</div>
+          <div className="cifra text-3xl text-azul">{fmtPts(g.temporadaProm)}</div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-azul/80">Puntaje promedio</div>
         </div>
         <div className="rounded-lg bg-azul-suave p-2.5">
-          <div className="cifra text-3xl text-azul">×{g.multiplicador.toFixed(2).replace(".", ",")}</div>
-          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-azul/80">Multiplicador</div>
+          <div className="cifra text-3xl text-azul">#{g.temporadaPuesto}</div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-azul/80">Puesto temporada</div>
         </div>
       </div>
-      <div className="mt-3 text-[11px] text-tenue">Nivel de temporada por percentil: Diamante top 5% · Oro 20% · Plata 40% · Bronce resto. Los Puntos de Liga no tocan el Puntaje Oficial: alimentan beneficios y desempates.</div>
+      <div className="mt-3 text-[11px] text-tenue">Nivel de temporada por percentil del Puntaje Oficial: Diamante top 5% · Oro 20% · Plata 40% · Bronce resto.</div>
     </div>
   );
 }
@@ -114,7 +113,7 @@ export function TuLiga({ div, meId, nombres, linkear }: { div: Division; meId?: 
           </div>
           <span className="chip text-white" style={{ background: v }}>{div.nombre}</span>
         </div>
-        <div className="mb-3 text-xs text-tenue">Grupo de nivel parecido. Al cierre de temporada: top 3 ascienden, últimos 3 descienden. Desempate por Puntos de Liga.</div>
+        <div className="mb-3 text-xs text-tenue">Grupo de nivel parecido. Al cierre de temporada: top 3 ascienden, últimos 3 descienden. Se ordena por el promedio de tu Puntaje Oficial.</div>
         <ol className="space-y-1">
           {div.miembros.map((m) => {
             const n = nombres.get(m.id);
@@ -128,7 +127,6 @@ export function TuLiga({ div, meId, nombres, linkear }: { div: Division; meId?: 
                 </span>
                 {m.zona === "ascenso" && <span className="inline-flex items-center text-[10px] font-bold text-verde-t"><ArrowUp className="anim-subir size-3" aria-hidden />ASC</span>}
                 {m.zona === "descenso" && <span className="inline-flex items-center text-[10px] font-bold text-rojo-t"><ArrowDown className="anim-bajar size-3" aria-hidden />DESC</span>}
-                <span className="w-14 text-right text-xs font-semibold opacity-80">{m.xp} PL</span>
                 <span className="cifra w-12 text-right">{fmtPts(m.prom)}</span>
               </li>
             );

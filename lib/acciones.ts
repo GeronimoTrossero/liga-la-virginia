@@ -106,17 +106,41 @@ export function construirPlan(raw: Raw, clientes: ClienteLite[], familias: Famil
     ],
   };
 
-  // PRD: visitas restantes / visitados sin venta
+  // PRD: efectividad de visitas = pedidos ÷ visitas
   const dias = diasHabilesRestantes(hoy);
-  const sinVenta = Math.max(0, raw.visitas_realizadas - raw.pedidos_levantados);
-  const porDia = Math.round(raw.visitas_realizadas / 22);
+  const V = raw.visitas_realizadas;
+  const P = raw.pedidos_levantados;
+  const sinVenta = Math.max(0, V - P);
+  const efect = V ? P / V : 0;
+  const pct = (x: number) => (x * 100).toFixed(1).replace(".", ",") + "%";
+  const objPrd = KPIS.find((k) => k.key === "prd")!.objetivo;
+  const metas = [
+    { meta: Math.min(objPrd, efect + (objPrd - efect) / 2), etiqueta: "mitad de camino" },
+    { meta: objPrd, etiqueta: "objetivo" },
+    { meta: objPrd * 1.1, etiqueta: "máximo puntaje (110%)" },
+  ].filter((m) => m.meta > efect + 1e-6);
+  let acumulado = P;
+  const prdAcc: Accion[] = [];
+  for (const [i, m] of metas.entries()) {
+    const necesarios = Math.max(0, Math.ceil(m.meta * V) - acumulado);
+    if (!necesarios) continue;
+    acumulado += necesarios;
+    prdAcc.push({
+      id: `prd-${i}`, kpi: "prd", delta: { pedidos_levantados: necesarios },
+      titulo: `Convertí ${necesarios} visitas sin venta en pedido → ${pct(acumulado / V)}`,
+      detalle: `${m.etiqueta} · ${dias ? `≈ ${Math.ceil(necesarios / dias)} por día en los ${dias} días hábiles que quedan` : "último día del mes"}`,
+    });
+  }
+  const deCada10 = Math.round(efect * 10);
   plan.prd = {
     kpi: "prd",
-    resumen: `${sinVenta} visitas sin pedido · te quedan ${dias} días hábiles (~${porDia * dias} visitas)`,
+    resumen: V
+      ? `De cada 10 visitas, ${deCada10} terminan en pedido (${P} pedidos en ${V} visitas). ${sinVenta} visitas quedaron sin venta.`
+      : "Todavía no registraste visitas este mes.",
     grupos: [{
-      titulo: "Convertir visitas en pedidos",
-      nota: "Priorizá los visitados sin venta que compraban el mes pasado.",
-      acciones: [1, 2, 3, 4].map((i) => ({ id: `prd-${i}`, kpi: "prd" as const, titulo: `+5 pedidos en visitas sin venta (tanda ${i})`, detalle: `${i === 1 ? "esta semana" : `día ${Math.min(dias, i + 1)}`}`, delta: { pedidos_levantados: 5 } })),
+      titulo: "Mejorá la efectividad de tus visitas",
+      nota: `Efectividad = pedidos levantados ÷ visitas realizadas. Hoy estás en ${pct(efect)} y el objetivo es ${pct(objPrd)}. Cada visita que cerrás con pedido sube el número; volver a los comercios que no compraron es lo que más rinde.`,
+      acciones: prdAcc,
     }],
   };
 

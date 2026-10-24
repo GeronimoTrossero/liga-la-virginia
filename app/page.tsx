@@ -10,7 +10,7 @@ const PERFILES = [
 const PILARES = [
   { t: "BI visual y scorecard", d: "Los 7 KPIs oficiales con su fórmula, semáforos, cartas y mapa de calor.", v: "#2a402b" },
   { t: "Gamificación", d: "Ligas con ascensos, rachas con protector, misiones y derbis entre sucursales.", v: "#895e36" },
-  { t: "Agentes de IA", d: "Cobranza autónoma por WhatsApp y relevamiento con foto de góndola.", v: "#912c28" },
+  { t: "Plan de acción", d: "Qué hacer hoy para subir cada KPI, mensajes de WhatsApp listos con el Comodín Dibu y relevamiento con foto de góndola.", v: "#912c28" },
 ];
 
 export default async function Home() {
@@ -23,11 +23,11 @@ export default async function Home() {
           <div>
             <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-azul">Liga La Virginia · Temporada Ago – Oct 2026</div>
             <h1 className="mt-3 text-5xl font-extrabold uppercase leading-[0.95] tracking-tight text-azul sm:text-6xl lg:text-7xl">
-              Vendé. Cobrá.<br />
-              <span className="italic">Subí tu carta.</span>
+              Medí tus KPIs.<br />
+              <span className="italic">Mejorá tu puntaje.</span>
             </h1>
             <p className="mt-5 max-w-xl text-base text-azul-hondo sm:text-lg">
-              Los 7 KPIs oficiales convertidos en un BI visual, una liga con rachas y temporadas, y agentes de IA que cobran y relevan por vos.
+              Tu Puntaje Oficial con los 7 KPIs comerciales, un plan de acción que te dice qué hacer hoy para subirlo y una liga para competir con tu equipo.
             </p>
             {s && <Link href={homeDe(s)} className="btn btn-azul mt-6">Seguir como {s.nombre} <span aria-hidden>›</span></Link>}
           </div>

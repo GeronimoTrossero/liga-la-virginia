@@ -4,16 +4,19 @@ import { useRouter } from "next/navigation";
 import { subirFotoGondola } from "@/app/actions";
 import { motion, AnimatePresence } from "framer-motion";
 import { Carta } from "./Carta";
+import { SubidaNivel } from "./SubidaNivel";
 import { KPI_BY_KEY, fmtPct, fmtPts, puestoPara, score, simular, aplicar, sumarDeltas, type KpiKey, type Nivel, type Raw } from "@/lib/scoring";
 import { construirPlan, potencialKpi, type Accion, type ClienteLite, type FamiliaLite, type LanzLite } from "@/lib/acciones";
 import { plantillaDibu, waLink } from "@/lib/dibu";
 import { ArrowLeft, Camera, Check, CheckCheck, CheckCircle2, Copy, Hand, Lock, LockOpen, Send, X } from "lucide-react";
 import { SEM_COLOR, SEM_TEXTO, NIVEL_COLOR, NIVEL_BG, SectionTitle } from "./ui";
 
+const ORDEN_NIVEL: Nivel[] = ["Bronce", "Plata", "Oro", "Diamante"];
+
 export type RankRow = { id: string; nombre: string; sucursal: string; rank: number; puntaje: number; nivel: Nivel; bloqueado: boolean };
 
 type Props = {
-  me: { id: string; nombre: string; sucursal: string; tipo: string; raw: Raw; rank: number; rankSucursal: number; deltaRank: number | null; prevCumpl: Record<KpiKey, number> | null };
+  me: { id: string; nombre: string; sucursal: string; tipo: string; raw: Raw; rank: number; rankSucursal: number; deltaRank: number | null; prevCumpl: Record<KpiKey, number> | null; prevNivel: Nivel | null };
   total: number;
   totalSucursal: number;
   otros: number[];
@@ -86,12 +89,44 @@ export function VendedorPanel(p: Props) {
     setDibu({ comercio: c.nombre_comercio, telefono: c.telefono_demo, mensaje, url: waLink(c.telefono_demo, mensaje) });
   }
 
+  const [subida, setSubida] = useState<{ de: Nivel; a: Nivel; simulado: boolean } | null>(null);
+  const nivelPrevio = useRef<Nivel>(s.nivel);
+
+  useEffect(() => {
+    const prev = p.me.prevNivel;
+    if (!prev || ORDEN_NIVEL.indexOf(actual.nivel) <= ORDEN_NIVEL.indexOf(prev)) return;
+    const clave = `subida-${p.me.id}-${actual.nivel}`;
+    if (sessionStorage.getItem(clave)) return;
+    sessionStorage.setItem(clave, "1");
+    setSubida({ de: prev, a: actual.nivel, simulado: false });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    const antes = nivelPrevio.current;
+    nivelPrevio.current = s.nivel;
+    if (ORDEN_NIVEL.indexOf(s.nivel) > ORDEN_NIVEL.indexOf(antes)) setSubida({ de: antes, a: s.nivel, simulado: checked.size > 0 });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [s.nivel]);
+
   const puntos = s.puntaje - actual.puntaje;
   const desbloquea = actual.bloqueado && !s.bloqueado && (s.nivel === "Oro" || s.nivel === "Diamante");
   const subeNivel = !desbloquea && s.nivel !== actual.nivel;
 
   return (
     <div className="space-y-8">
+      <AnimatePresence>
+        {subida && (
+          <SubidaNivel
+            key={`${subida.de}-${subida.a}`}
+            de={subida.de}
+            a={subida.a}
+            simulado={subida.simulado}
+            onClose={() => setSubida(null)}
+            carta={{ nombre: p.me.nombre, sucursal: p.me.sucursal, tipo: p.me.tipo, puntaje: s.puntaje, cumpl: s.cumpl, semaforos: s.semaforos, rank: rankSim, rankSucursal: p.me.rankSucursal }}
+          />
+        )}
+      </AnimatePresence>
       {/* ---------- Carta + posición ---------- */}
       <section className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 md:grid-cols-[auto_minmax(0,1fr)]">
         <div className="flex flex-col items-center gap-3">
