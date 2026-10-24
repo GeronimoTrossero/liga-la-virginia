@@ -20,7 +20,7 @@ export default async function TemporadaPage() {
   const orden = (n: Nivel) => NIVELES.indexOf(n);
   const suben = vs.filter((v) => v.nivelTemporadaPrev && orden(v.nivelTemporada) > orden(v.nivelTemporadaPrev)).length;
   const bajan = vs.filter((v) => v.nivelTemporadaPrev && orden(v.nivelTemporada) < orden(v.nivelTemporadaPrev)).length;
-  const xpTop = [...vs].sort((a, b) => b.xpTemporada - a.xpTemporada).slice(0, 5);
+  const xpTop = [...vs].sort((a, b) => b.temporadaProm - a.temporadaProm).slice(3, 8);
 
   return (
     <div className="space-y-10">
@@ -35,7 +35,7 @@ export default async function TemporadaPage() {
           <Link key={v.id} href={`/vendedor/${v.id}`} className={`panel anim-entrar block p-5 text-center hover:border-azul/50 hover:shadow-md ${i === 0 ? "!border-sol bg-sol-suave" : ""}`} style={{ animationDelay: `${i * 90}ms` }}>
             <div className="flex justify-center"><Ilus n={(["oro", "plata", "bronce"] as const)[i]} size={i === 0 ? 76 : 64} alt={`${i + 1}° puesto`} /></div>
             <div className="text-2xl font-bold leading-tight text-azul">{nombres.get(v.id)?.nombre}</div>
-            <div className="text-sm text-niebla">{nombres.get(v.id)?.sucursal} · {fmtPts(v.temporadaProm)} prom · {v.xpTemporada} PL</div>
+            <div className="text-sm text-niebla">{nombres.get(v.id)?.sucursal} · {fmtPts(v.temporadaProm)} prom</div>
           </Link>
         ))}
       </section>
@@ -55,14 +55,14 @@ export default async function TemporadaPage() {
           <div className="mt-3 text-sm"><span className="inline-flex items-center gap-1 text-verde-t"><ArrowUp className="anim-subir size-4" aria-hidden /> {suben} suben de nivel</span> · <span className="inline-flex items-center gap-1 text-rojo-t"><ArrowDown className="anim-bajar size-4" aria-hidden /> {bajan} bajan</span></div>
         </div>
         <div className="panel p-4 lg:col-span-2">
-          <h2 className="titulo mb-3 text-xl">Más Puntos de Liga</h2>
+          <h2 className="titulo mb-3 text-xl">Mejor promedio de temporada</h2>
           <ol className="space-y-1.5">
             {xpTop.map((v, i) => (
               <li key={v.id} className="flex items-center gap-3 text-sm">
-                <span className="w-6 text-right cifra text-base text-azul text-niebla">{i + 1}</span>
+                <span className="w-6 text-right cifra text-base text-niebla">{i + 1}</span>
                 <Link href={`/vendedor/${v.id}`} className="flex-1 font-semibold hover:text-azul-web hover:underline">{nombres.get(v.id)?.nombre}</Link>
-                <span className="flex items-center gap-1 text-xs text-niebla"><Ilus n="llama" size={18} /> {v.rachaGeneral} meses · ×{v.multiplicador.toFixed(2).replace(".", ",")}</span>
-                <span className="w-16 text-right cifra text-lg text-azul text-dorado-texto">{v.xpTemporada}</span>
+                <span className="flex items-center gap-1 text-xs text-niebla"><Ilus n="llama" size={18} /> racha {v.rachaGeneral} {v.rachaGeneral === 1 ? "mes" : "meses"}</span>
+                <span className="w-16 text-right cifra text-lg text-azul">{fmtPts(v.temporadaProm)}</span>
               </li>
             ))}
           </ol>

@@ -6,6 +6,7 @@ import { misionEquipo } from "@/lib/game";
 import { requireSession, puedeVerVendedor } from "@/lib/auth";
 import { homeDe } from "@/lib/session";
 import { diasHabilesRestantes } from "@/lib/acciones";
+import { nivelBase } from "@/lib/scoring";
 import { VendedorPanel } from "@/components/VendedorPanel";
 import { Rachas, RiesgoBanners, TemporadaCard, TuLiga } from "@/components/Juego";
 import { Progreso, SectionTitle } from "@/components/ui";
@@ -56,7 +57,7 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
       <RiesgoBanners g={g} />
 
       <VendedorPanel
-        me={{ id: me.id, nombre: me.nombre, sucursal: me.sucursal, tipo: me.tipo, raw: me.raw, rank: me.rank, rankSucursal: me.rankSucursal, deltaRank: me.deltaRank, prevCumpl: me.prevCumpl }}
+        me={{ id: me.id, nombre: me.nombre, sucursal: me.sucursal, tipo: me.tipo, raw: me.raw, rank: me.rank, rankSucursal: me.rankSucursal, deltaRank: me.deltaRank, prevCumpl: me.prevCumpl, prevNivel: me.prevPuntaje === null ? null : nivelBase(me.prevPuntaje) }}
         total={board.length}
         totalSucursal={suc.length}
         otros={board.filter((x) => x.id !== id).map((x) => x.s.puntaje)}
@@ -94,7 +95,7 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
             <div key={m.id} className={`panel p-4 ${m.prog >= 1 ? "!border-verde" : ""}`}>
               <div className="flex items-start justify-between gap-2">
                 <IconoMision icono={m.icono} />
-                <span className="chip bg-fondo text-niebla">Individual · +20 PL</span>
+                <span className="chip bg-fondo text-niebla">Individual</span>
               </div>
               <div className="mt-2 text-lg font-bold text-azul">{m.titulo}</div>
               <div className="text-sm text-niebla">{m.descripcion}</div>
