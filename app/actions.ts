@@ -58,20 +58,30 @@ export async function subirFotoGondola(vendedorId: string) {
 }
 
 // ---------- Gerente de equipo (rol SUPERVISOR) ----------
-export async function reconocer(vendedorId: string, mensaje: string) {
-  const s = await vendedorAutorizado(vendedorId);
-  if (s.rol === "VENDEDOR") throw new Error("Solo gerentes");
+type Resultado = { ok: true } | { ok: false; error: string };
+
+export async function reconocer(vendedorId: string, mensaje: string): Promise<Resultado> {
+  const s = await getSession();
+  if (!s || s.rol !== "SUPERVISOR") return { ok: false, error: "Solo los gerentes pueden reconocer." };
+  const { data: v } = await supabaseAdmin().from("vendedor").select("id,supervisor").eq("id", vendedorId).maybeSingle<{ id: string; supervisor: string }>();
+  if (!v || !puedeVerVendedor(s, v)) return { ok: false, error: "Ese vendedor no es de tu equipo." };
   const { error } = await supabaseAdmin().from("reconocimiento").insert({ de: s.nombre, para: vendedorId, mensaje: mensaje.slice(0, 140) });
-  if (error) throw error;
+  if (error) {
+    console.error("[reconocer]", error.message);
+    return { ok: false, error: "No se pudo enviar el reconocimiento." };
+  }
   return { ok: true };
 }
 
-export async function elegirMisionEquipo(key: string) {
+export async function elegirMisionEquipo(key: string): Promise<Resultado> {
   const s = await getSession();
-  if (!s || s.rol !== "SUPERVISOR") throw new Error("Solo gerentes");
-  if (!MISIONES_EQUIPO.some((m) => m.key === key)) throw new Error("Misión inválida");
+  if (!s || s.rol !== "SUPERVISOR") return { ok: false, error: "Solo los gerentes pueden elegir la misión." };
+  if (!MISIONES_EQUIPO.some((m) => m.key === key)) return { ok: false, error: "Misión inválida." };
   const { error } = await supabaseAdmin().from("mision_equipo").upsert({ supervisor: s.ref, mes: MES_ACTUAL, mision_key: key, updated_at: new Date().toISOString() });
-  if (error) throw error;
+  if (error) {
+    console.error("[elegirMisionEquipo]", error.message);
+    return { ok: false, error: "No se pudo guardar la misión." };
+  }
   revalidatePath(`/supervisor/${encodeURIComponent(s.ref)}`);
   return { ok: true };
 }

@@ -10,7 +10,7 @@ export function IconoMision({ icono, size = 48 }: { icono: string; size?: number
   if (ilus) return <Ilus n={ilus} size={size} />;
   const I = MISION_LUCIDE[icono] ?? ClipboardList;
   return (
-    <span className="anim-flotar inline-grid shrink-0 place-items-center rounded-xl bg-azul-suave text-azul" style={{ width: size, height: size }} aria-hidden>
+    <span className="inline-grid shrink-0 place-items-center rounded-xl bg-azul-suave text-azul" style={{ width: size, height: size }} aria-hidden>
       <I style={{ width: size * 0.55, height: size * 0.55 }} strokeWidth={2.2} />
     </span>
   );
@@ -34,26 +34,11 @@ const SRC: Record<Ilustracion, string> = {
   asado: "/img/asado.png",
 };
 
-/** Movimiento por defecto de cada ilustración. */
-const ANIM: Record<Ilustracion, string> = {
-  diamante: "anim-destello",
-  oro: "anim-balanceo",
-  plata: "anim-balanceo",
-  bronce: "anim-balanceo",
-  copa: "anim-flotar",
-  balon: "anim-giro",
-  cohete: "anim-despegue",
-  holo: "anim-holo",
-  escudo: "anim-latido-suave",
-  llama: "llama",
-  asado: "anim-flotar",
-};
-
 export const NIVEL_ILUS: Record<Nivel, Ilustracion> = { Diamante: "diamante", Oro: "oro", Plata: "plata", Bronce: "bronce" };
 
 /**
  * Ilustración 3D (PNG con fondo blanco, fundido con mix-blend-multiply).
- * `quieto` apaga la animación; `apagado` la muestra en gris.
+ * Siempre estática (`quieto` se mantiene por compatibilidad); `apagado` la muestra en gris.
  */
 export function Ilus({
   n,
@@ -72,7 +57,7 @@ export function Ilus({
 }) {
   return (
     <span
-      className={`ilus ${quieto || apagado ? "" : ANIM[n]} ${apagado ? "opacity-30 grayscale" : ""} ${className}`}
+      className={`ilus ${apagado ? "opacity-30 grayscale" : ""} ${className}`}
       style={{ width: size, height: size }}
       role={alt ? "img" : undefined}
       aria-label={alt || undefined}

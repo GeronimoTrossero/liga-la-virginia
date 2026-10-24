@@ -5,7 +5,8 @@ import { groupBy, promedio, type Ranked } from "@/lib/board";
 import { MES_ACTUAL, MESES, nombreMes } from "@/lib/config";
 import { PuestoCelda, PuestoMesProvider, PuestoMesSelect, type PuestoHist } from "./PuestoMes";
 import { KPIS, fmtPts } from "@/lib/scoring";
-import { getGame, getMisionEquipoKey } from "@/lib/data";
+import { getAnual, getGame, getMisionEquipoKey } from "@/lib/data";
+import { IndicadoresEquipo } from "./IndicadoresEquipo";
 import { MISIONES_EQUIPO, RACHA_KPIS, RACHA_LABEL, misionEquipo } from "@/lib/game";
 import { ReconocerBtn, ElegirMision } from "./SupervisorAcciones";
 import { CartaDe } from "./CartaDe";
@@ -25,7 +26,8 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
       const r = porMes.get(m)!.get(id);
       return { mes: m, label: nombreMes(m, true), rank: r?.rank ?? null, delta: r?.deltaRank ?? null };
     });
-  const [game, misionKey] = await Promise.all([getGame(), getMisionEquipoKey(nombre)]);
+  const [game, misionKey, anual] = await Promise.all([getGame(), getMisionEquipoKey(nombre), getAnual()]);
+  const rachaMax = (id: string) => Math.max(0, ...RACHA_KPIS.map((k) => game.vendors.get(id)?.rachas[k].meses ?? 0));
   const mEq = misionEquipo(misionKey);
   const progEq = mEq.progreso(team);
   const enRiesgo = team.flatMap((x) => RACHA_KPIS.filter((k) => game.vendors.get(x.id)!.rachas[k].estado === "riesgo").map((k) => ({ x, k, r: game.vendors.get(x.id)!.rachas[k] }))).sort((a, b) => b.r.meses - a.r.meses);
@@ -98,6 +100,8 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
           </ul>
         </div>
       </section>
+
+      <IndicadoresEquipo team={team} board={board} anual={anual} rachaMax={rachaMax} />
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="panel min-w-0 p-4 sm:p-5">
