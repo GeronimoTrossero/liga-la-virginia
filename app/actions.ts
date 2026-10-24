@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { registrarPago, resetDemo, runCobranza, agenteGondola } from "@/lib/automation";
 import { buscarUsuario, getSession, iniciarSesion, pinOk, puedeVerVendedor, MODO_PRESENTADOR } from "@/lib/auth";
 import { COOKIE, homeDe } from "@/lib/session";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin, SupabaseConfigError } from "@/lib/supabase";
 import { MES_ACTUAL } from "@/lib/config";
 import { MISIONES_EQUIPO } from "@/lib/game";
 
@@ -13,7 +13,16 @@ import { MISIONES_EQUIPO } from "@/lib/game";
 export async function login(_: unknown, form: FormData): Promise<{ error?: string }> {
   const id = String(form.get("usuario") ?? "").trim();
   const pin = String(form.get("pin") ?? "").trim();
-  const u = id ? await buscarUsuario(id) : null;
+  let u: Awaited<ReturnType<typeof buscarUsuario>> = null;
+  try {
+    u = id ? await buscarUsuario(id) : null;
+  } catch (e) {
+    if (e instanceof SupabaseConfigError) {
+      console.error("[login]", e.message);
+      return { error: "El servidor no tiene configurada la base de datos. Revisá las variables de entorno de Supabase." };
+    }
+    throw e;
+  }
   if (!u || !pinOk(pin, u.pin_hash)) return { error: "Usuario o PIN incorrecto" };
   await iniciarSesion(u);
   const next = String(form.get("next") ?? "");
