@@ -10,17 +10,17 @@ export function ReconocerBtn({ vendedorId, nombre }: { vendedorId: string; nombr
   const [msg, setMsg] = useState(FRASES[0]);
   const [ok, setOk] = useState(false);
   const [pending, start] = useTransition();
-  if (ok) return <span className="text-xs font-bold text-verde">👏 enviado</span>;
+  if (ok) return <span className="text-xs font-bold text-verde-t">👏 enviado</span>;
   return (
     <span className="relative">
-      <button onClick={() => setOpen(!open)} className="rounded-md border border-acento/50 px-1.5 py-0.5 text-xs text-acento hover:bg-acento/10" title={`Reconocer a ${nombre}`}>👏</button>
+      <button onClick={() => setOpen(!open)} className="rounded-full border border-azul/30 px-2 py-0.5 text-xs hover:bg-azul-suave" title={`Reconocer a ${nombre}`} aria-label={`Reconocer a ${nombre}`}>👏</button>
       {open && (
-        <div className="absolute right-0 top-7 z-30 w-64 rounded-lg border border-linea bg-panel p-3 text-left shadow-xl">
-          <div className="mb-1 text-xs font-bold">Reconocer a {nombre}</div>
-          <select value={msg} onChange={(e) => setMsg(e.target.value)} className="w-full rounded border border-linea bg-noche p-1.5 text-xs">
+        <div className="absolute left-0 top-8 z-30 w-64 whitespace-normal rounded-xl border border-linea bg-white p-3 text-left shadow-xl">
+          <div className="mb-2 text-xs font-bold text-azul">Reconocer a {nombre}</div>
+          <select value={msg} onChange={(e) => setMsg(e.target.value)} className="campo w-full text-xs" aria-label="Mensaje">
             {FRASES.map((f) => <option key={f}>{f}</option>)}
           </select>
-          <button disabled={pending} onClick={() => start(async () => { await reconocer(vendedorId, msg); setOk(true); setOpen(false); })} className="mt-2 w-full rounded bg-acento py-1 text-xs font-bold text-noche disabled:opacity-50">Enviar reconocimiento</button>
+          <button disabled={pending} onClick={() => start(async () => { await reconocer(vendedorId, msg); setOk(true); setOpen(false); })} className="btn btn-sm btn-azul mt-2 w-full">Enviar reconocimiento</button>
         </div>
       )}
     </span>
@@ -32,7 +32,7 @@ export function ElegirMision({ opciones, actual, editable }: { opciones: { key: 
   const router = useRouter();
   if (!editable) return null;
   return (
-    <select disabled={pending} value={actual} onChange={(e) => start(async () => { await elegirMisionEquipo(e.target.value); router.refresh(); })} className="rounded-lg border border-linea bg-noche px-2 py-1.5 text-sm">
+    <select disabled={pending} value={actual} onChange={(e) => start(async () => { await elegirMisionEquipo(e.target.value); router.refresh(); })} className="campo w-full max-w-full sm:w-auto" aria-label="Elegir misión colectiva">
       {opciones.map((o) => <option key={o.key} value={o.key}>{o.icono} {o.titulo}</option>)}
     </select>
   );

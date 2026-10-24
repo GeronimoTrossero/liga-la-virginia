@@ -1,57 +1,160 @@
 @import "tailwindcss";
 
+/*
+  Identidad La Virginia. Ver DECISIONS.md › "Rediseño de marca".
+  ✓ = verificado en archivos oficiales (logo SVG / CSS del sitio). ≈ = aproximación o derivado para interfaz.
+*/
 @theme inline {
-  --font-display: var(--font-display);
-  --font-sans: var(--font-body);
-  --color-noche: #0a0506;
-  --color-cancha: #160a0c;
-  --color-panel: #1a0d10;
-  --color-linea: #3a1c22;
-  --color-tiza: #fff7ee;
-  --color-niebla: #b8a3a6;
-  --color-oro: #f5c542;
-  --color-verde: #22c55e;
-  --color-amarillo: #facc15;
-  --color-rojo: #ef4444;
-  --color-diamante: #7df9ff;
-  --color-acento: #ffd100;
-  --color-lv: #e4002b;
-  --color-lvoscuro: #8f0019;
+  --font-sans: var(--font-open-sans), system-ui, sans-serif;
+  --font-display: var(--font-open-sans), system-ui, sans-serif;
+
+  /* Institucionales */
+  --color-azul: #164194;        /* ✓ logo-la-virginia.svg */
+  --color-azul-web: #034ea2;    /* ✓ header del sitio */
+  --color-azul-pie: #0e4194;    /* ✓ secciones y pie del sitio */
+  --color-azul-hondo: #0b2f6e;  /* ≈ derivado: degradés y estados presionados */
+  --color-azul-suave: #e9eff9;  /* ≈ derivado: fondos de selección */
+  --color-sol: #ffd100;         /* ✓ logo-la-virginia.svg (positivo 2025: #ffd302) */
+  --color-sol-suave: #fff5cc;   /* ≈ derivado */
+  --color-dorado: #b09613;      /* ✓ volantas del sitio */
+  --color-dorado-texto: #7e6a0d;/* ≈ dorado oscurecido para texto chico (AA 5,3:1) */
+
+  /* Neutros de interfaz */
+  --color-fondo: #f4f5f7;       /* ≈ entre #f1f1f1 y #f8f8f8 del sitio */
+  --color-superficie: #ffffff;
+  --color-linea: #dfe3e8;       /* ≈ */
+  --color-tinta: #1f2933;       /* ≈ texto principal */
+  --color-niebla: #4d5864;      /* ✓ texto del sitio */
+  --color-tenue: #6b7580;       /* ≈ texto secundario (4,7:1) */
+
+  /* Semáforo (semántico, separado de la marca) */
+  --color-verde: #1f8a4c;
+  --color-verde-t: #17663a;
+  --color-verde-s: #ddf2e5;
+  --color-ambar: #c77700;
+  --color-ambar-t: #8a5300;
+  --color-ambar-s: #fcebcb;
+  --color-rojo: #c8312b;
+  --color-rojo-t: #a3231e;
+  --color-rojo-s: #f9dedc;
+
+  /* Variedades (≈ muestreadas de packaging: tés de Fontana Diseño y cafés del catálogo) */
+  --color-v-verde: #2a402b;
+  --color-v-salvia: #597840;
+  --color-v-naranja: #ed983c;
+  --color-v-marron: #895e36;
+  --color-v-sutil: #704a19;
+  --color-v-rojo: #912c28;
+  --color-v-violeta: #723181;
+  --color-v-noche: #1b133f;
+  --color-v-crema: #f9dbbd;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
+  overflow-x: clip;
 }
 
 body {
-  background:
-    radial-gradient(1200px 600px at 50% -220px, rgba(228, 0, 43, 0.35), transparent 70%),
-    radial-gradient(700px 380px at 100% 0, rgba(255, 209, 0, 0.10), transparent 70%),
-    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0 80px, transparent 80px 160px),
-    #0a0506;
-  background-attachment: fixed;
-  color: #fff7ee;
-  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--color-fondo);
+  color: var(--color-tinta);
+  font-family: var(--font-open-sans), system-ui, sans-serif;
   min-height: 100vh;
 }
 
-.font-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-  letter-spacing: 0.02em;
+:focus-visible {
+  outline: 3px solid var(--color-azul-web);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+.sobre-azul :focus-visible {
+  outline-color: var(--color-sol);
 }
 
-.panel {
-  background: linear-gradient(180deg, rgba(38, 16, 21, 0.9), rgba(20, 9, 11, 0.9));
-  border: 1px solid #3a1c22;
-  border-radius: 1rem;
+/* Cifras: KPIs, puntajes y rankings */
+.cifra {
+  font-variant-numeric: tabular-nums lining-nums;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
-/* ---- Cartas por nivel ---- */
+@layer components {
+  .panel {
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: 14px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  }
+  /* Volanta en mayúsculas espaciadas, como "SABORES QUE RECONFORTAN" */
+  .volanta {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-dorado-texto);
+  }
+  .titulo {
+    color: var(--color-azul);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: 9999px;
+    padding: 0.55rem 1.1rem;
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1.2;
+    transition: background-color 0.15s, color 0.15s, border-color 0.15s;
+    min-height: 40px;
+  }
+  .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+  .btn-azul { background: var(--color-azul); color: #fff; }
+  .btn-azul:hover:not(:disabled) { background: var(--color-azul-hondo); }
+  .btn-sol { background: var(--color-sol); color: var(--color-azul); }
+  .btn-sol:hover:not(:disabled) { background: #f2c400; }
+  .btn-linea { border: 1.5px solid var(--color-azul); color: var(--color-azul); background: #fff; }
+  .btn-linea:hover:not(:disabled) { background: var(--color-azul-suave); }
+  .btn-sm { min-height: 32px; padding: 0.3rem 0.75rem; font-size: 0.75rem; }
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    border-radius: 9999px;
+    padding: 0.125rem 0.6rem;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .campo {
+    border: 1px solid var(--color-linea);
+    background: #fff;
+    border-radius: 10px;
+    color: var(--color-tinta);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    min-height: 40px;
+  }
+  .campo:focus { outline: none; border-color: var(--color-azul-web); box-shadow: 0 0 0 3px rgba(3, 78, 162, 0.18); }
+  /* Franja vertical de variedad, como la banda que identifica cada té en su caja */
+  .franja {
+    background:
+      repeating-linear-gradient(160deg, rgba(255, 255, 255, 0.16) 0 6px, transparent 6px 14px),
+      var(--v, var(--color-azul));
+  }
+}
+
+/* ---- Cartas por nivel (estuche de producto: campo de color + franja + etiqueta) ---- */
 .carta {
   position: relative;
   overflow: hidden;
-  clip-path: polygon(0 6%, 12% 0, 88% 0, 100% 6%, 100% 88%, 50% 100%, 0 88%);
+  border-radius: 18px;
   isolation: isolate;
+  box-shadow: 0 10px 24px -12px rgba(11, 47, 110, 0.35), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
 }
 .carta::after {
   content: "";
@@ -61,65 +164,51 @@ body {
   z-index: 1;
 }
 .carta-Bronce {
-  background: linear-gradient(160deg, #8a5a32 0%, #b98352 35%, #6b4423 70%, #4a2e17 100%);
-  color: #fff3e6;
+  background: linear-gradient(165deg, #9a6a3f 0%, #7d5230 55%, #63401f 100%);
+  color: #fff;
+  --v: #f9dbbd;
 }
 .carta-Plata {
-  background: linear-gradient(155deg, #6b7280 0%, #e5e7eb 30%, #9ca3af 50%, #f9fafb 68%, #6b7280 100%);
-  color: #111827;
+  background: linear-gradient(165deg, #f7f8fa 0%, #e3e7ec 55%, #cfd5dd 100%);
+  color: var(--color-tinta);
+  --v: #8a94a3;
 }
 .carta-Oro {
-  background: linear-gradient(155deg, #8a6410 0%, #fde68a 28%, #d4a017 50%, #fff3b0 68%, #a77b15 100%);
-  color: #2a1d00;
-}
-.carta-Oro::after {
-  background: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.55) 45%, transparent 60%);
-  background-size: 250% 100%;
-  animation: brillo 3.2s ease-in-out infinite;
+  background: linear-gradient(165deg, #ffe04d 0%, #ffd100 50%, #f1bd00 100%);
+  color: var(--color-azul);
+  --v: #164194;
 }
 .carta-Diamante {
-  background: conic-gradient(from 0deg at 50% 40%, #7df9ff, #c084fc, #f0abfc, #fde68a, #86efac, #7df9ff);
-  color: #0b1020;
-  animation: holo 6s linear infinite;
+  background: linear-gradient(165deg, #1f55b5 0%, #164194 50%, #0b2f6e 100%);
+  color: #fff;
+  --v: #ffd100;
 }
+.carta-Oro::after,
 .carta-Diamante::after {
-  background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.7) 45%, transparent 65%);
+  background: linear-gradient(110deg, transparent 35%, rgba(255, 255, 255, 0.35) 47%, transparent 60%);
   background-size: 250% 100%;
-  animation: brillo 2.4s ease-in-out infinite;
+  animation: brillo 4s ease-in-out infinite;
 }
 @keyframes brillo {
   0% { background-position: 150% 0; }
   100% { background-position: -100% 0; }
 }
-@keyframes holo {
-  0% { filter: hue-rotate(0deg) saturate(1.1); }
-  100% { filter: hue-rotate(360deg) saturate(1.1); }
-}
-
-.glow-Diamante { box-shadow: 0 0 40px rgba(125, 249, 255, 0.45); }
-.glow-Oro { box-shadow: 0 0 36px rgba(245, 197, 66, 0.4); }
-.glow-Plata { box-shadow: 0 0 24px rgba(229, 231, 235, 0.2); }
-.glow-Bronce { box-shadow: 0 0 18px rgba(185, 131, 82, 0.2); }
 
 .fantasma {
-  background: repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0 6px, rgba(255, 255, 255, 0.12) 6px 12px);
+  background: repeating-linear-gradient(135deg, rgba(22, 65, 148, 0.22) 0 5px, rgba(22, 65, 148, 0.08) 5px 10px);
 }
 
 .scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
-.scrollbar-thin::-webkit-scrollbar-thumb { background: #3a1c22; border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #c5ccd6; border-radius: 3px; }
+
+@keyframes llama {
+  0%, 100% { transform: scale(1) rotate(-3deg); }
+  50% { transform: scale(1.12) rotate(3deg); }
+}
+.llama { display: inline-block; animation: llama 1.4s ease-in-out infinite; }
+@keyframes latido { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 49, 43, 0.35); } 50% { box-shadow: 0 0 0 6px rgba(200, 49, 43, 0); } }
+.latido { animation: latido 1.8s ease-out infinite; }
 
 @media (prefers-reduced-motion: reduce) {
-  .carta-Oro::after, .carta-Diamante, .carta-Diamante::after { animation: none; }
+  .carta-Oro::after, .carta-Diamante::after, .llama, .latido { animation: none; }
 }
-
-.franja-lv {
-  background: linear-gradient(90deg, #e4002b 0 70%, #ffd100 70% 85%, #ffffff 85%);
-  height: 4px;
-}
-@keyframes llama {
-  0%, 100% { transform: scale(1) rotate(-3deg); filter: drop-shadow(0 0 6px rgba(255, 120, 0, .8)); }
-  50% { transform: scale(1.15) rotate(3deg); filter: drop-shadow(0 0 12px rgba(255, 209, 0, .9)); }
-}
-.llama { display: inline-block; animation: llama 1.2s ease-in-out infinite; }
-@keyframes latido { 0%,100% { box-shadow: 0 0 0 0 rgba(228,0,43,.5);} 50% { box-shadow: 0 0 0 8px rgba(228,0,43,0);} }
-.latido { animation: latido 1.6s ease-out infinite; }

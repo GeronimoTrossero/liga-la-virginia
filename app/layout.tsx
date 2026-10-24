@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Barlow, Barlow_Condensed } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import { Header } from "@/components/Header";
 import { Presentador } from "@/components/Presentador";
 import { LivePoll } from "@/components/LivePoll";
@@ -9,14 +9,14 @@ import { supId } from "@/lib/session";
 import { DEMO_VENDEDOR } from "@/lib/config";
 import "./globals.css";
 
-const display = Barlow_Condensed({ variable: "--font-display", subsets: ["latin"], weight: ["600", "700", "800", "900"] });
-const body = Barlow({ variable: "--font-body", subsets: ["latin"], weight: ["400", "500", "600", "700"] });
+// Open Sans: la tipografía de texto del sitio oficial de La Virginia.
+const openSans = Open_Sans({ variable: "--font-open-sans", subsets: ["latin"], style: ["normal", "italic"] });
 
 export const metadata: Metadata = {
   title: "Liga La Virginia",
   description: "BI visual gamificado + agentes de IA para los vendedores de La Virginia.",
 };
-export const viewport: Viewport = { themeColor: "#e4002b", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#034ea2", width: "device-width", initialScale: 1 };
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -27,21 +27,24 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
     const sups = [...new Set(vends.map((v) => v.supervisor))].sort();
     const demo = vends.find((v) => v.id === DEMO_VENDEDOR);
     opciones = [
-      { value: "gerencia", label: "🏟️ Gerencia nacional", grupo: "Gerencia" },
-      ...(demo ? [{ value: demo.id, label: `⭐ ${demo.nombre} (demo)`, grupo: "Demo" }, { value: supId(demo.supervisor, sups), label: `⭐ ${demo.supervisor} (supervisor demo)`, grupo: "Demo" }] : []),
-      ...sups.map((x) => ({ value: supId(x, sups), label: x, grupo: "Supervisores" })),
+      ...(demo ? [{ value: demo.id, label: `⭐ ${demo.nombre} (demo)`, grupo: "Demo" }, { value: supId(demo.supervisor, sups), label: `⭐ ${demo.supervisor} (gerente demo)`, grupo: "Demo" }] : []),
+      ...sups.map((x) => ({ value: supId(x, sups), label: x, grupo: "Gerentes" })),
       ...vends.map((v) => ({ value: v.id, label: `${v.nombre} · ${v.sucursal.split("/")[0]}`, grupo: "Vendedores" })).sort((a, b) => a.label.localeCompare(b.label)),
     ];
   }
   return (
     <html lang="es-AR">
-      <body className={`${display.variable} ${body.variable} antialiased`}>
+      <body className={`${openSans.variable} antialiased`}>
         <Header />
         {s && <LivePoll />}
-        <main className="mx-auto max-w-7xl px-4 pb-16 pt-4">{children}</main>
-        <footer className="border-t border-linea/60 py-6 text-center text-xs text-niebla">
-          Liga La Virginia · Shippear #3 · Datos ficticios del desafío · Demo: hoy = 24/10/2026
-          {s && MODO_PRESENTADOR && <Presentador opciones={opciones} actual={s.uid} />}
+        <main className="mx-auto max-w-7xl px-4 pb-16 pt-6">{children}</main>
+        <footer className="sobre-azul bg-azul-pie py-8 text-center text-xs text-white/80">
+          <div className="mx-auto max-w-7xl px-4">
+            <div className="volanta !text-sol">Liga La Virginia</div>
+            <p className="mt-2">Shippear #3 · Datos ficticios del desafío · Demo: hoy = 24/10/2026</p>
+            <p className="mt-1 text-white/60">Logotipo propiedad de La Virginia S.A., usado sin modificaciones con fines de demostración.</p>
+            {s && MODO_PRESENTADOR && <Presentador opciones={opciones} actual={s.uid} />}
+          </div>
         </footer>
       </body>
     </html>

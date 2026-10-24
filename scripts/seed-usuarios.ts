@@ -5,7 +5,7 @@ import { supabaseUrl } from "../lib/supabase";
 import { hashPin } from "../lib/auth-pin";
 import { supId } from "../lib/session";
 
-// Usuarios demo: vendedores (id = ID_Vendedor), supervisores (sup-<apellido>) y gerencia. PIN demo: 1234.
+// Usuarios demo: vendedores (id = ID_Vendedor), gerentes de equipo (sup-<apellido>, rol SUPERVISOR en la base). PIN demo: 1234.
 export async function seedUsuarios() {
   const db = createClient(supabaseUrl(), process.env.SUPABASE_SERVICE_ROLE_KEY!.trim(), { auth: { persistSession: false } });
   const { data: vends, error } = await db.from("vendedor").select("id,nombre,supervisor");
@@ -16,7 +16,6 @@ export async function seedUsuarios() {
   const rows = [
     ...(vends ?? []).map((v) => ({ id: v.id, rol: "VENDEDOR", ref: v.id, nombre: v.nombre, pin_hash: h() })),
     ...sups.map((s) => ({ id: supId(s, sups), rol: "SUPERVISOR", ref: s, nombre: s, pin_hash: h() })),
-    { id: "gerencia", rol: "GERENCIA", ref: "gerencia", nombre: "Gerencia Comercial", pin_hash: h() },
   ];
   await db.from("usuario").delete().not("id", "is", null);
   const { error: e2 } = await db.from("usuario").insert(rows);

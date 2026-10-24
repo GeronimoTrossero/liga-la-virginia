@@ -8,7 +8,7 @@ export { hashPin, pinOk } from "./auth-pin";
 export type Usuario = { id: string; rol: Session["rol"]; ref: string; nombre: string; pin_hash: string };
 
 export async function buscarUsuario(id: string): Promise<Usuario | null> {
-  const { data } = await supabaseAdmin().from("usuario").select("*").eq("id", id.trim()).maybeSingle<Usuario>();
+  const { data } = await supabaseAdmin().from("usuario").select("*").eq("id", id.trim()).in("rol", ["VENDEDOR", "SUPERVISOR"]).maybeSingle<Usuario>();
   return data ?? null;
 }
 
@@ -29,7 +29,7 @@ export async function requireSession(): Promise<Session> {
 
 /** ¿Puede esta sesión ver el detalle de este vendedor? */
 export function puedeVerVendedor(s: Session, v: { id: string; supervisor: string }) {
-  return s.rol === "GERENCIA" || (s.rol === "VENDEDOR" && s.ref === v.id) || (s.rol === "SUPERVISOR" && s.ref === v.supervisor);
+  return (s.rol === "VENDEDOR" && s.ref === v.id) || (s.rol === "SUPERVISOR" && s.ref === v.supervisor);
 }
 
 export const MODO_PRESENTADOR = process.env.MODO_PRESENTADOR !== "off";

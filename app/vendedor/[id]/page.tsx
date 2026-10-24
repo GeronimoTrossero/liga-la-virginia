@@ -9,6 +9,7 @@ import { diasHabilesRestantes } from "@/lib/acciones";
 import { VendedorPanel } from "@/components/VendedorPanel";
 import { Automatizacion } from "@/components/Automatizacion";
 import { Rachas, RiesgoBanners, TemporadaCard, TuLiga } from "@/components/Juego";
+import { Progreso, SectionTitle } from "@/components/ui";
 
 export default async function VendedorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -34,20 +35,24 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
   const misiones = misionesDelMes(MES_ACTUAL).filter((m) => m.alcance === "INDIVIDUAL").map((m) => ({ ...m, prog: progresoIndividual(m, me.raw, me.s) }));
 
   return (
-    <div className="space-y-8">
-      <div>
-        <div className="text-xs font-bold uppercase tracking-[0.3em] text-acento">{nombreMes(MES_ACTUAL)} · hoy 24/10 · {diasHabilesRestantes(DEMO_TODAY)} días hábiles para el cierre</div>
-        <h1 className="font-display text-4xl font-black uppercase leading-none sm:text-5xl">{me.nombre}</h1>
-        <div className="text-sm text-niebla">{me.sucursal} · {me.tipo} · Supervisor: {me.supervisor}</div>
+    <div className="space-y-10">
+      <div className="border-b border-linea pb-5">
+        <div className="volanta">{nombreMes(MES_ACTUAL)} · hoy 24/10 · {diasHabilesRestantes(DEMO_TODAY)} días hábiles para el cierre</div>
+        <h1 className="titulo mt-1 text-3xl sm:text-4xl">{me.nombre}</h1>
+        <div className="mt-1 text-sm text-niebla">{me.sucursal} · {me.tipo} · Gerente: {me.supervisor}</div>
       </div>
 
-      {recos.length > 0 && (
-        <div className="rounded-xl border border-acento/50 bg-acento/10 px-4 py-3">
-          <div className="font-display text-lg font-black uppercase text-acento">👏 {recos[0].de} te reconoció</div>
-          <div className="text-sm">&ldquo;{recos[0].mensaje}&rdquo;</div>
+      {(recos.length > 0 || mvp?.id === id) && (
+        <div className="space-y-2">
+          {recos.length > 0 && (
+            <div className="rounded-xl border-l-4 border-sol bg-sol-suave px-4 py-3" role="status">
+              <div className="font-bold text-azul">👏 {recos[0].de} te reconoció</div>
+              <div className="text-sm text-tinta">&ldquo;{recos[0].mensaje}&rdquo;</div>
+            </div>
+          )}
+          {mvp?.id === id && <div className="rounded-xl border-l-4 border-verde bg-verde-s px-4 py-3 font-semibold text-verde-t">⭐ Sos el MVP de {me.sucursal}: el que más mejoró este mes (+{mvp.mejora.toFixed(1).replace(".", ",")} pts).</div>}
         </div>
       )}
-      {mvp?.id === id && <div className="rounded-xl border border-verde/50 bg-verde/10 px-4 py-3 font-semibold">⭐ Sos el MVP de {me.sucursal}: el que más mejoró este mes (+{mvp.mejora.toFixed(1).replace(".", ",")} pts).</div>}
       <RiesgoBanners g={g} />
 
       <VendedorPanel
@@ -61,51 +66,46 @@ export default async function VendedorPage({ params }: { params: Promise<{ id: s
         lanzamientos={lanzamientos}
         hoy={DEMO_TODAY}
         extra={
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div key="extra" className="grid gap-4 lg:grid-cols-2">
             <Rachas g={g} />
             <TemporadaCard g={g} nombreTemp={game.temporada.nombre} />
           </div>
         }
-        liga={<TuLiga div={div} meId={id} nombres={nombres} />}
+        liga={<TuLiga key="liga" div={div} meId={id} nombres={nombres} />}
       />
 
       <Automatizacion vendedorId={id} logs={logs.map((l) => ({ ...l, comercio: l.cliente_id ? comercio.get(l.cliente_id) : undefined }))} impagos={clientes.filter((c) => !c.pagado && c.facturas > 0).map((c) => c.id)} />
 
       <section>
-        <h2 className="mb-3 font-display text-3xl font-black uppercase">🎯 Misiones de {nombreMes(MES_ACTUAL).split(" ")[0]}</h2>
+        <SectionTitle volanta="Objetivos del mes">Misiones de {nombreMes(MES_ACTUAL).split(" ")[0]}</SectionTitle>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <div className={`panel p-4 ring-1 ring-acento/40 ${progEq >= 1 ? "border-verde/60" : ""}`}>
-            <div className="flex items-start justify-between gap-2">
-              <div className="text-3xl">{mEq.icono}</div>
-              <span className="rounded-full bg-acento/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-acento">Colectiva · equipo {me.supervisor.split(" ")[0]}</span>
+          <div className={`panel overflow-hidden ${progEq >= 1 ? "!border-verde" : ""}`}>
+            <div className="franja h-1.5" aria-hidden />
+            <div className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="text-3xl">{mEq.icono}</div>
+                <span className="chip bg-azul text-white">Colectiva · equipo {me.supervisor.split(" ")[0]}</span>
+              </div>
+              <div className="mt-2 text-lg font-bold text-azul">{mEq.titulo}</div>
+              <div className="text-sm text-niebla">{mEq.descripcion} La eligió tu gerente.</div>
+              <Progreso p={progEq} />
+              <div className="mt-1.5 flex justify-between text-xs"><span className={progEq >= 1 ? "font-bold text-verde-t" : "text-niebla"}>{progEq >= 1 ? "✅ Cumplida" : `${Math.round(progEq * 100)}%`}</span><span className="font-semibold text-dorado-texto">🎁 Tercer Tiempo</span></div>
             </div>
-            <div className="mt-1 font-display text-xl font-bold uppercase">{mEq.titulo}</div>
-            <div className="text-sm text-niebla">{mEq.descripcion} La eligió tu supervisor.</div>
-            <Barra p={progEq} />
-            <div className="mt-1 flex justify-between text-xs"><span>{progEq >= 1 ? "✅ Cumplida" : `${Math.round(progEq * 100)}%`}</span><span className="text-acento">🎁 Tercer Tiempo</span></div>
           </div>
           {misiones.map((m) => (
-            <div key={m.id} className={`panel p-4 ${m.prog >= 1 ? "border-verde/60" : ""}`}>
+            <div key={m.id} className={`panel p-4 ${m.prog >= 1 ? "!border-verde" : ""}`}>
               <div className="flex items-start justify-between gap-2">
                 <div className="text-3xl">{m.icono}</div>
-                <span className="rounded-full bg-white/5 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-niebla">Individual · +20 PL</span>
+                <span className="chip bg-fondo text-niebla">Individual · +20 PL</span>
               </div>
-              <div className="mt-1 font-display text-xl font-bold uppercase">{m.titulo}</div>
+              <div className="mt-2 text-lg font-bold text-azul">{m.titulo}</div>
               <div className="text-sm text-niebla">{m.descripcion}</div>
-              <Barra p={m.prog} />
-              <div className="mt-1 flex justify-between text-xs"><span className={m.prog >= 1 ? "font-bold text-verde" : "text-niebla"}>{m.prog >= 1 ? "✅ Cumplida" : `${Math.round(m.prog * 100)}%`}</span><span className="text-acento">🎁 {m.premio}</span></div>
+              <Progreso p={m.prog} />
+              <div className="mt-1.5 flex justify-between text-xs"><span className={m.prog >= 1 ? "font-bold text-verde-t" : "text-niebla"}>{m.prog >= 1 ? "✅ Cumplida" : `${Math.round(m.prog * 100)}%`}</span><span className="font-semibold text-dorado-texto">🎁 {m.premio}</span></div>
             </div>
           ))}
         </div>
       </section>
-    </div>
-  );
-}
-
-function Barra({ p }: { p: number }) {
-  return (
-    <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-white/5">
-      <div className="h-full rounded-full" style={{ width: `${Math.round(Math.min(1, p) * 100)}%`, background: p >= 1 ? "#22c55e" : "linear-gradient(90deg,#e4002b,#ffd100)" }} />
     </div>
   );
 }

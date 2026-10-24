@@ -8,6 +8,6 @@ export default async function Page({ params }: { params: Promise<{ nombre: strin
   const nombre = decodeURIComponent(raw);
   const s = await requireSession();
   const propio = s.rol === "SUPERVISOR" && s.ref === nombre;
-  if (s.rol !== "GERENCIA" && !propio) redirect(homeDe(s));
-  return <EquipoView tipo="supervisor" nombre={nombre} editable={propio} />;
+  if (!propio) redirect(homeDe(s));
+  return <EquipoView nombre={nombre} editable />;
 }

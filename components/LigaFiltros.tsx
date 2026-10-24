@@ -12,7 +12,7 @@ export function LigaFiltros({ meses, sucursales, regionales, tipos, kpis }: { me
     else p.delete(k);
     router.push(`/liga?${p.toString()}#ranking`, { scroll: false });
   };
-  const sel = "rounded-lg border border-linea bg-panel px-2 py-1.5 text-sm text-tiza";
+  const sel = "campo";
   return (
     <div className="flex flex-wrap gap-2">
       <select className={sel} value={sp.get("mes") ?? ""} onChange={(e) => set("mes", e.target.value)}>

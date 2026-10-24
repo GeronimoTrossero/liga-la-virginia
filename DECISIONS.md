@@ -42,7 +42,7 @@
 - **Sin anon**: se borraron las políticas SELECT públicas (`schema-v2.sql`); verificado con la REST API (devuelve `[]`). La anon key ya no se usa.
 - **SWR en vez de Realtime**: polling cada 2 s a `/api/live`, que devuelve una firma (conteo + último id) de `ajuste_kpi`, `automation_log`, `reconocimiento` y `mision_equipo`, filtrada por los vendedores visibles para la sesión. Si cambia, `router.refresh()` vuelve a renderizar los Server Components (el cálculo sigue en el servidor).
 - **Modo presentador**: `<details>` discreto en el footer, solo con sesión iniciada; re-emite la cookie para el usuario elegido. Apagable con `MODO_PRESENTADOR=off`.
-- **Rutas por rol**: vendedor → solo `/vendedor/<su id>`; supervisor → `/supervisor/<su nombre>`, el detalle de sus vendedores y `/liga`; gerencia → todo (`/liga`, `/temporada`, `/regional/*`).
+- **Rutas por rol**: vendedor → solo `/vendedor/<su id>`; gerente (rol SUPERVISOR) → `/supervisor/<su nombre>`, el detalle de sus vendedores, `/liga` y `/temporada`. (El rol gerencia se eliminó en V3.)
 - **Nivel mensual vs nivel de temporada**: la carta muestra el nivel mensual (umbrales absolutos + candado); el nivel de temporada es por percentil sobre el promedio de los 3 meses: Diamante top 5%, Oro siguiente 20%, Plata siguiente 40%, Bronce resto (interpreté los % como tramos consecutivos).
 - **Temporadas**: Nov–Ene, Feb–Abr, May–Jul, Ago–Oct. La actual (Ago–Oct 2026) incluye octubre en vivo.
 - **Rachas**: se cuentan sobre meses cerrados; el mes en curso muestra estado (viva / protegida / en riesgo / arrancala) sin consumir protectores todavía. "En riesgo" = había racha y el KPI hoy no está en verde (ni cubierto por protector).
@@ -51,6 +51,55 @@
 - **Tu Liga**: 14 divisiones de 9–10 armadas por el promedio de la temporada anterior; dentro se ordena por promedio de la temporada actual (desempate: Puntos de Liga). Nombres de café (Ristretto, Espresso…).
 - **Misión colectiva**: por equipo de supervisor (no por sucursal), elegible entre 3; default "Nadie en rojo en Cobranzas".
 - **Cinta de Capitán**: sucursal con la cadena más larga de meses con promedio ≥ promedio nacional. **MVP**: mayor mejora de puntaje vs mes anterior dentro de la sucursal. **DT del Mes**: supervisor con mayor mejora del promedio del equipo.
-- **Adopción** en la vista gerencia es un dato **simulado** (83%) y está rotulado así.
+- **Adopción** en la Liga nacional es un dato **simulado** (83%) y está rotulado así.
 - **Agente de góndola**: persiste el resultado (marca clientes relevados + `ajuste_kpi` de encuestas) para que impacte en vivo; `Reiniciar demo` lo revierte. El vendedor demo (V052) tiene solo 1 encuesta pendiente: el agente completa "hasta 5".
 - **Álbum de figuritas** fuera de la vista vendedor (pedido V2). Las figuritas siguen en la base y alimentan los protectores (podio por KPI).
+
+## V3: sin gerencia, "Gerente" y rediseño de marca
+
+### Roles
+- **Se eliminó el rol gerencia**: perfil de la home, usuario demo (borrado de la tabla `usuario` y del seed), opción del modo presentador y la página `/regional`. `verificar()` rechaza cualquier sesión con un rol que no sea VENDEDOR o SUPERVISOR, y `buscarUsuario()` filtra por esos roles.
+- **"Supervisor" pasa a llamarse "Gerente"** solo en la interfaz. En la base el rol sigue siendo `SUPERVISOR`; rutas (`/supervisor/...`), IDs de usuario (`sup-pintos`) y contenido del panel no cambian. `/liga` y `/temporada` quedan para el gerente; el título "La transmisión" pasó a "Liga nacional".
+
+### Referencias visuales investigadas (24/10/2026)
+- **Sitio oficial** lavirginia.com.ar: estilos computados del CSS, logos SVG y composición de las secciones.
+- **Catálogo** /productos: fotos de los envases de café (Sutil, Puro Aroma, cápsulas Intenso y Equilibrado). La primera visita dio Cloudflare 521; funcionó al reintentar.
+- **Fontana Diseño**, identidad institucional y packaging: identificador sobre amarillo, bandas de hojas por variedad de té y estuches de Té Negro.
+
+### Lenguaje gráfico adoptado
+- **Fondos claros** con bandas de color plenas (azul en encabezado y pie, amarillo en el hero), como el sitio y los estuches. Se descartó el tema oscuro rojo y amarillo de V1/V2, que no tenía respaldo en la marca.
+- **Volanta + título**: volanta en mayúsculas espaciadas y dorada, y título azul, como en el sitio ("¿CÓMO COMENZÓ TODO? / Sobre nosotros"). Los botones son píldoras con "›".
+- **Franja de variedad**: banda vertical con rayado sutil en el color de una variedad, tomada de la banda de cada caja de té. No reproduce la ilustración de hojas.
+- **Cartas como estuches**: campo de color, franja lateral y etiqueta de nivel (como la etiqueta "INTENSO" de los envases).
+  - Oro = amarillo de marca con letras azules (el estuche de Té Negro).
+  - Diamante = azul institucional.
+  - Plata y Bronce = neutros.
+- **Semáforo** con verde, ámbar y rojo propios, en tonos claros con texto oscuro, para no confundirlos con el azul y el amarillo de la marca.
+- **Logotipo**: los SVG oficiales descargados del sitio, sin modificar (`public/brand/`). No se redibujó ni se creó ninguna versión.
+  - El positivo amarillo va sobre el azul del encabezado.
+  - La versión azul va sobre el amarillo (hero y login).
+
+### Paleta (tokens en `app/globals.css`)
+| Rol | HEX | Origen |
+|---|---|---|
+| Azul institucional | `#164194` | ✓ `logo-la-virginia.svg` del sitio |
+| Amarillo institucional | `#FFD100` | ✓ mismo SVG. El positivo 2025 usa `#FFD302` y el logo azul con bajada, `#1B4586` |
+| Azul encabezado | `#034EA2` | ✓ CSS computado del header |
+| Azul secciones/pie | `#0E4194` | ✓ CSS computado |
+| Dorado de volantas | `#B09613` | ✓ CSS computado. Para texto chico se usa `#7E6A0D` ≈ (oscurecido para contraste AA) |
+| Gris de texto | `#4D5864` | ✓ CSS computado |
+| Fondo / bordes / texto principal | `#F4F5F7` / `#DFE3E8` / `#1F2933` | ≈ derivados para la interfaz |
+| Variedades de té | verde `#2A402B`, salvia `#597840`, naranja `#ED983C`, marrón `#895E36`, rojo `#912C28`, violeta `#723181`, crema `#F9DBBD` | ≈ promedio de píxeles de las bandas de la imagen de Fontana |
+| Cafés | Sutil `#704A19`, Puro Aroma `#1B133F` | ≈ muestreados de las fotos de los envases |
+| Semáforo | verde `#1F8A4C`, ámbar `#C77700`, rojo `#C8312B` | interfaz (semántico, no es de marca) |
+
+✓ = valor leído de un archivo oficial. ≈ = aproximación visual o derivado; no son códigos oficiales de la marca.
+
+### Tipografía
+- **Open Sans** (verificada: es la fuente que carga el CSS del sitio oficial), con eje variable 400–800 y cursiva. Se usa en todo:
+  - Títulos en 700, azul.
+  - Volantas en 700, mayúsculas, espaciado 0,22em.
+  - Cifras (KPIs, puntajes, rankings) en 800 con `tabular-nums`, clase `.cifra`.
+  - Botones en 700.
+  - Texto y formularios en 400–600.
+- El logotipo y su bajada son letras de diseño propio. No se identificó una familia comercial y no se imitaron. La cursiva del hero ("Subí tu carta.") es Open Sans Italic.

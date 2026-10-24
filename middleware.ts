@@ -20,10 +20,10 @@ export async function middleware(req: NextRequest) {
     if (s.rol === "VENDEDOR" || (s.rol === "SUPERVISOR" && seg !== s.ref)) return NextResponse.redirect(home);
     return NextResponse.next();
   }
-  if (pathname.startsWith("/regional/") || pathname.startsWith("/liga") || pathname.startsWith("/temporada")) {
+  if (pathname.startsWith("/liga") || pathname.startsWith("/temporada")) {
     if (s.rol === "VENDEDOR") return NextResponse.redirect(home);
   }
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/vendedor/:path*", "/supervisor/:path*", "/regional/:path*", "/liga/:path*", "/liga", "/temporada"] };
+export const config = { matcher: ["/vendedor/:path*", "/supervisor/:path*", "/liga/:path*", "/liga", "/temporada"] };

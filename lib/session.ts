@@ -1,7 +1,8 @@
 // Sesión firmada (JWT HS256 en cookie httpOnly). Edge-safe: lo usa el middleware.
 import { SignJWT, jwtVerify } from "jose";
 
-export type Rol = "VENDEDOR" | "SUPERVISOR" | "GERENCIA";
+export type Rol = "VENDEDOR" | "SUPERVISOR";
+const ROLES: Rol[] = ["VENDEDOR", "SUPERVISOR"];
 export type Session = { uid: string; rol: Rol; ref: string; nombre: string };
 
 export const COOKIE = "liga_session";
@@ -22,7 +23,7 @@ export async function verificar(token?: string | null): Promise<Session | null> 
   try {
     const { payload } = await jwtVerify(token, secret());
     const { uid, rol, ref, nombre } = payload as unknown as Session;
-    return uid && rol && ref ? { uid, rol, ref, nombre } : null;
+    return uid && ROLES.includes(rol) && ref ? { uid, rol, ref, nombre } : null;
   } catch {
     return null;
   }
@@ -31,8 +32,7 @@ export async function verificar(token?: string | null): Promise<Session | null> 
 /** Ruta de inicio de cada rol. */
 export function homeDe(s: Pick<Session, "rol" | "ref">) {
   if (s.rol === "VENDEDOR") return `/vendedor/${s.ref}`;
-  if (s.rol === "SUPERVISOR") return `/supervisor/${encodeURIComponent(s.ref)}`;
-  return "/liga";
+  return `/supervisor/${encodeURIComponent(s.ref)}`;
 }
 
 export function supId(nombre: string, todos: string[]) {

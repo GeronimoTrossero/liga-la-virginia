@@ -6,7 +6,8 @@
 
 - **Producción:** https://liga-la-virginia.vercel.app
 - **Repo:** https://github.com/GeronimoTrossero/liga-la-virginia
-- **Demo:** usuarios `V052` (vendedor), `sup-pintos` (supervisor) y `gerencia`. PIN `1234`.
+- **Demo:** usuarios `V052` (vendedor) y `sup-pintos` (gerente de equipo). PIN `1234`.
+- **Identidad visual:** paleta, tipografía y logotipo de La Virginia, con fuentes y aproximaciones documentadas en `DECISIONS.md` (V3).
 
 ---
 
@@ -16,7 +17,7 @@
 |---|---|
 | Una planilla mensual con 7 KPIs que nadie mira hasta el cierre | Una **carta de jugador** con semáforos, que el vendedor mira en la calle todos los días |
 | "Estás 82% en cobranzas" | "**Cobrá a estos 3 clientes → +0,4 pts, subís al #50 y desbloqueás Oro**" |
-| El supervisor descubre los problemas a fin de mes | **Mapa de calor** del equipo, rachas en riesgo y misión colectiva en vivo |
+| El gerente descubre los problemas a fin de mes | **Mapa de calor** del equipo, rachas en riesgo y misión colectiva en vivo |
 | El vendedor pierde horas mandando recordatorios y llenando encuestas | Un **agente de cobranzas** por WhatsApp y un **agente de relevamiento** que lee la foto de la góndola |
 | Competencia que desmotiva a la mitad de abajo | **Ligas de 10 de nivel parecido**, rachas, MVP del que más mejoró y misiones colectivas |
 
@@ -40,7 +41,7 @@ Next.js 15 App Router ── Server Components / Server Actions / API routes ─
                         lib/automation.ts ← agentes (cobranza, góndola, Dibu)
 ```
 
-- **Login real:** tabla `usuario` (rol `VENDEDOR`, `SUPERVISOR` o `GERENCIA`) con PIN hasheado con scrypt. La sesión es un JWT HS256 en una cookie httpOnly y un middleware redirige según el rol. El vendedor solo ve su carta. El supervisor ve a su equipo y el detalle de sus vendedores. Gerencia ve todo.
+- **Login real:** tabla `usuario` (rol `VENDEDOR` o `SUPERVISOR`, que en pantalla se llama **Gerente**) con PIN hasheado con scrypt. La sesión es un JWT HS256 en una cookie httpOnly y un middleware redirige según el rol. El vendedor solo ve su carta. El gerente ve a su equipo, el detalle de sus vendedores, la Liga nacional y la Temporada.
 - **Sin acceso anónimo:** RLS activado y ninguna política para `anon` (probado: la API REST con la anon key devuelve `[]`). Todas las lecturas pasan por el servidor con la service role, filtradas por la sesión.
 - **Tiempo real sin Realtime:** SWR consulta `/api/live` cada 2 segundos. Cuando cambia la firma (ajustes, bandeja, reconocimientos), refresca los Server Components.
 - **Las dos monedas nunca se mezclan:**
@@ -78,10 +79,10 @@ Next.js 15 App Router ── Server Components / Server Actions / API routes ─
   - **Racha en riesgo:** banner con lo que falta ("faltan 4 cobros").
 - **Tu Liga:** 14 divisiones de ~10 vendedores (Liga Ristretto, Espresso…), armadas con la temporada anterior. Al cierre suben los 3 primeros y bajan los 3 últimos.
 - **Incentivos colectivos:**
-  - Misión colectiva elegida por el supervisor, con premio Tercer Tiempo.
+  - Misión colectiva elegida por el gerente, con premio Tercer Tiempo.
   - Cinta de Capitán para la sucursal con la cadena más larga sobre el promedio nacional.
   - MVP del equipo: el que más mejoró dentro de su sucursal.
-  - DT del Mes y derbis entre sucursales, con un gol por cada KPI ganado; Interior vs GBA y Copa Derbi rodante.
+  - DT del Mes (el gerente cuyo equipo más mejoró) y derbis entre sucursales, con un gol por cada KPI ganado; Interior vs GBA y Copa Derbi rodante.
   - Remontada, Revelación y Muro de la Fama.
 
 ## 3. Impacto operativo de los agentes de IA
@@ -98,13 +99,13 @@ Next.js 15 App Router ── Server Components / Server Actions / API routes ─
 
 **Vendedor de demo: V052 · Mansilla Germán (Córdoba/Rio Cuarto).** Tiene 90,8 pts, que lo pondrían en Oro, pero está **🔒 bloqueado en Plata por Cobranzas (82%)**.
 
-1. **Carta bloqueada.** En la Home, "Soy Vendedor" lleva al login con `V052` y PIN `1234`. Se ve la carta plateada con el candado, el puesto #54 de 135, las rachas (🔥 12 meses en Venta) y Tu Liga.
-2. **Mejorá tu carta.** Abrir el desplegable **Cobranzas**, que muestra la lista de clientes por cobrar con monto y vencimiento. Al tildar los 3 primeros, el simulador muestra **"+0,4 pts → subís al #50 · 🔓 desbloqueás Oro"** y la carta se vuelve dorada en vivo.
+1. **Carta bloqueada.** En la Home, "Soy Vendedor" lleva al login con `V052` y PIN `1234`. Se ve la carta Plata con el candado, el puesto #54 de 135, las rachas (🔥 12 meses en Venta) y Tu Liga.
+2. **Mejorá tu carta.** Abrir el desplegable **Cobranzas**, que muestra la lista de clientes por cobrar con monto y vencimiento. Al tildar los 3 primeros, el simulador muestra **"+0,4 pts → subís al #50 · 🔓 desbloqueás Oro"** y la carta se vuelve el estuche amarillo de La Virginia en vivo.
 3. **Comodín Dibu.** Tocar 🧤 en un cliente: aparece el WhatsApp redactado y el botón "Abrir WhatsApp" (wa.me).
 4. **Pago en vivo.** En el Agente de Cobranzas, tocar **⏩ Simular: pasaron 5 días** y después **💬 "Ya pagué"**: el cobro se registra y la carta sube sola (SWR).
    - Bonus: en **Relevamientos**, "📸 Subir foto de góndola" completa las encuestas pendientes.
-5. **Supervisor.** En el footer, abrir 🎬 modo presentador y elegir "Pintos Maximiliano". Se ven el **mapa de calor** de 7 KPIs, las alertas, las rachas en riesgo, la misión colectiva (elegirla en vivo) y el botón 👏 Reconocer.
-6. **Ligas y derbis.** En el modo presentador, elegir Gerencia para ver La transmisión: kilos del país, adopción, DT del Mes, Cinta de Capitán, podio holográfico, clásico Interior vs GBA, derbis, Balón de Oro y Muro de la Fama. Después pasar a **Temporada** para ver el cierre Ago–Oct con ascensos y descensos por división.
+5. **Gerente.** En el footer, abrir el modo presentador y elegir "Pintos Maximiliano". Se ven el **mapa de calor** de 7 KPIs, las alertas, las rachas en riesgo, la misión colectiva (elegirla en vivo) y el botón 👏 Reconocer.
+6. **Ligas y derbis.** Desde el gerente, tocar **Liga** en el encabezado para ver la Liga nacional: kilos del país, adopción, DT del Mes, Cinta de Capitán, podio, clásico Interior vs GBA, derbis, Balón de Oro y Muro de la Fama. Después pasar a **Temporada** para ver el cierre Ago–Oct con ascensos y descensos por división.
 
 Para repetir: **↺ Reiniciar demo** en la vista del vendedor.
 

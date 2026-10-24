@@ -68,10 +68,10 @@ export async function reiniciarDemo(vendedorId: string) {
   return r;
 }
 
-// ---------- Supervisor ----------
+// ---------- Gerente de equipo (rol SUPERVISOR) ----------
 export async function reconocer(vendedorId: string, mensaje: string) {
   const s = await vendedorAutorizado(vendedorId);
-  if (s.rol === "VENDEDOR") throw new Error("Solo supervisores o gerencia");
+  if (s.rol === "VENDEDOR") throw new Error("Solo gerentes");
   const { error } = await supabaseAdmin().from("reconocimiento").insert({ de: s.nombre, para: vendedorId, mensaje: mensaje.slice(0, 140) });
   if (error) throw error;
   return { ok: true };
@@ -79,7 +79,7 @@ export async function reconocer(vendedorId: string, mensaje: string) {
 
 export async function elegirMisionEquipo(key: string) {
   const s = await getSession();
-  if (!s || s.rol !== "SUPERVISOR") throw new Error("Solo supervisores");
+  if (!s || s.rol !== "SUPERVISOR") throw new Error("Solo gerentes");
   if (!MISIONES_EQUIPO.some((m) => m.key === key)) throw new Error("Misión inválida");
   const { error } = await supabaseAdmin().from("mision_equipo").upsert({ supervisor: s.ref, mes: MES_ACTUAL, mision_key: key, updated_at: new Date().toISOString() });
   if (error) throw error;
