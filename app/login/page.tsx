@@ -32,8 +32,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </div>
           <div className="mt-5 text-center text-xs text-tenue">Usuarios de demo</div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-center text-xs">
-            <a href="/login?rol=vendedor" className="rounded-full border border-linea py-2 font-semibold text-niebla hover:border-azul hover:text-azul">{DEMO_VENDEDOR} · vendedor</a>
-            <a href="/login?rol=supervisor" className="rounded-full border border-linea py-2 font-semibold text-niebla hover:border-azul hover:text-azul">sup-pintos · gerente</a>
+            <a href="/login?rol=vendedor" className="rounded-full border border-linea py-2 font-semibold text-niebla hover:border-azul hover:text-azul">Vendedor</a>
+            <a href="/login?rol=supervisor" className="rounded-full border border-linea py-2 font-semibold text-niebla hover:border-azul hover:text-azul">Gerente</a>
           </div>
         </div>
       </div>
