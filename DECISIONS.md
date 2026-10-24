@@ -26,3 +26,11 @@
 - Sin `ANTHROPIC_API_KEY`, sin n8n/Twilio, sin Vercel CLI (ajustes finales del brief): Comodín Dibu con plantillas, cobranza solo simulada, deploy lo importás vos desde vercel.com.
 - Sin auth real: selector "Ver como" en cookie. **En producción: login + RLS por rol** (vendedor ve su detalle y solo puesto/puntaje de los demás; supervisor ve a sus dependientes).
 - Puntajes en pantalla se calculan en el servidor con `lib/scoring.ts` desde `kpi_mes` (+ `ajuste_kpi` del mes en curso). `score_mes`/`score_anual` quedan precalculados por el seed para consumo externo y para el Balón de Oro.
+- En esta máquina hay intercepción TLS (antivirus/proxy): `npm run dev:local` arranca Next con `--use-system-ca`. En Vercel no hace falta.
+- Cada redeploy en Vercel no toca la base: para repetir la demo usá "↺ Reiniciar demo" en la vista vendedor (borra ajustes y bandeja de ese vendedor).
+
+## UX
+- Revelación excluye al ganador de Remontada (si no, suele ser la misma persona y se pierde un protagonista).
+- Clásicos: Litoral (Santa Fe–Rosario), Norte (Tucumán–Salta), Costa (Mar del Plata–Bahía Blanca), Cuyo vs Centro (Mendoza–Córdoba), NEA (Resistencia–Posadas). Marcador = KPIs ganados.
+- Copa Derbi: la tiene la sucursal #1 de la liga de sucursales del mes; se muestran los últimos 3 tenedores.
+- Rutas `/regional/[nombre]` reutilizan la vista de supervisor con todo el equipo regional.

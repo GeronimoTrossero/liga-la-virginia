@@ -80,7 +80,7 @@ export function VendedorPanel(p: Props) {
   return (
     <div className="space-y-8">
       {/* ---------- Carta + posición ---------- */}
-      <section className="grid items-start gap-6 md:grid-cols-[auto_1fr]">
+      <section className="grid grid-cols-[minmax(0,1fr)] items-start gap-6 md:grid-cols-[auto_minmax(0,1fr)]">
         <div className="flex flex-col items-center gap-3">
           <Carta size="lg" nombre={p.me.nombre} sucursal={p.me.sucursal} tipo={p.me.tipo} puntaje={s.puntaje} nivel={s.nivel} cumpl={s.cumpl} semaforos={s.semaforos} flechas={checked.size ? undefined : flechas} rank={rankSim} rankSucursal={p.me.rankSucursal} bloqueado={s.bloqueado} motivo={s.motivoBloqueo} />
           <AnimatePresence>
