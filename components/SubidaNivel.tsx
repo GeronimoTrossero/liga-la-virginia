@@ -89,7 +89,7 @@ export function SubidaNivel({ carta, de, a, simulado, onClose }: { carta: Omit<C
         </div>
       )}
 
-      <div className="relative flex flex-col items-center gap-6" onClick={(e) => e.stopPropagation()}>
+      <div className="relative flex max-h-full flex-col items-center gap-4" onClick={(e) => e.stopPropagation()}>
         <motion.div
           className="text-center"
           initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
@@ -100,27 +100,29 @@ export function SubidaNivel({ carta, de, a, simulado, onClose }: { carta: Omit<C
           </h2>
         </motion.div>
 
-        <div style={{ perspective: 1200 }}>
+        <div
+          className="relative rounded-2xl transition-shadow duration-500"
+          style={{ boxShadow: fase === "revelado" ? `0 0 60px 10px ${color}99` : "none" }}
+        >
           <motion.div
-            style={{ transformStyle: "preserve-3d" }}
-            initial={{ scale: 0.6, opacity: 0, rotateY: 0 }}
+            key={fase === "giro" ? "giro" : "quieto"}
+            initial={fase === "antes" ? { scale: 0.6, opacity: 0 } : false}
             animate={
               fase === "antes"
-                ? { scale: 1, opacity: 1, rotateY: 0, x: [0, -4, 4, -3, 3, 0] }
+                ? { scale: 1, opacity: 1, x: [0, -4, 4, -3, 3, 0] }
                 : fase === "giro"
-                  ? { scale: [1, 0.85, 1.05], rotateY: 1440, x: 0 }
-                  : { scale: [1.15, 1], rotateY: 1440, x: 0 }
+                  ? { opacity: 1, scaleX: [1, 0, 1, 0, 1, 0, 1, 0, 1], scale: [1, 0.9, 0.9, 0.9, 0.95, 1, 1, 1.05, 1.05] }
+                  : { opacity: 1, scaleX: 1, scale: [1.12, 1] }
             }
             transition={
               fase === "antes"
                 ? { scale: { type: "spring", stiffness: 200, damping: 18 }, opacity: { duration: 0.3 }, x: { delay: 0.5, duration: 0.5 } }
                 : fase === "giro"
-                  ? { duration: 1.5, ease: [0.5, 0, 0.2, 1] }
+                  ? { duration: 1.5, ease: "easeInOut" }
                   : { duration: 0.5, ease: "easeOut" }
             }
-            className={fase === "revelado" ? "drop-shadow-[0_0_40px_rgba(255,209,0,0.55)]" : ""}
           >
-            <Carta {...carta} nivel={nivelVisible} size="lg" />
+            <Carta {...carta} nivel={nivelVisible} size="md" />
           </motion.div>
         </div>
 
