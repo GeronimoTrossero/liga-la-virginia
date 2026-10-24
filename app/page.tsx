@@ -7,12 +7,6 @@ const PERFILES = [
   { rol: "supervisor", volanta: "Con tu equipo", titulo: "Soy Gerente", sub: "Tu equipo en un mapa de calor, rachas en riesgo y misión colectiva.", v: "#723181" },
 ];
 
-const PILARES = [
-  { t: "BI visual y scorecard", d: "Los 7 KPIs oficiales con su fórmula, semáforos, cartas y mapa de calor.", v: "#2a402b" },
-  { t: "Gamificación", d: "Ligas con ascensos, rachas con protector, misiones y derbis entre sucursales.", v: "#895e36" },
-  { t: "Plan de acción", d: "Qué hacer hoy para subir cada KPI, mensajes de WhatsApp listos con el Comodín Dibu y relevamiento con foto de góndola.", v: "#912c28" },
-];
-
 export default async function Home() {
   const s = await getSession();
   return (
@@ -54,18 +48,6 @@ export default async function Home() {
             </Link>
           ))}
         </div>
-      </section>
-
-      <section className="grid gap-4 sm:grid-cols-3">
-        {PILARES.map((p) => (
-          <div key={p.t} className="panel overflow-hidden">
-            <div className="franja h-2" style={{ ["--v" as string]: p.v }} aria-hidden />
-            <div className="p-5">
-              <div className="text-lg font-bold text-azul">{p.t}</div>
-              <div className="mt-1 text-sm text-niebla">{p.d}</div>
-            </div>
-          </div>
-        ))}
       </section>
     </div>
   );
