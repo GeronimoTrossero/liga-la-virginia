@@ -4,16 +4,22 @@ import { getAutomationLog, getBoard } from "@/lib/data";
 import { groupBy, promedio, type Ranked } from "@/lib/board";
 import { MES_ACTUAL, nombreMes } from "@/lib/config";
 import { KPIS, fmtPts } from "@/lib/scoring";
-import { supabaseUrl } from "@/lib/supabase";
+import { getGame, getMisionEquipoKey } from "@/lib/data";
+import { MISIONES_EQUIPO, RACHA_KPIS, RACHA_LABEL, misionEquipo } from "@/lib/game";
+import { ReconocerBtn, ElegirMision } from "./SupervisorAcciones";
 import { CartaDe } from "./CartaDe";
-import { LiveRefresh } from "./LiveRefresh";
 import { NivelBadge, SEM_BG, Delta } from "./ui";
 
-export async function EquipoView({ tipo, nombre }: { tipo: "supervisor" | "regional"; nombre: string }) {
+export async function EquipoView({ tipo, nombre, editable = false }: { tipo: "supervisor" | "regional"; nombre: string; editable?: boolean }) {
   const board = await getBoard(MES_ACTUAL);
   const team = board.filter((x) => (tipo === "supervisor" ? x.supervisor : x.regional) === nombre);
   if (!team.length) notFound();
-  const logs = await getAutomationLog(team.map((x) => x.id));
+  const [logs, game, misionKey] = await Promise.all([getAutomationLog(team.map((x) => x.id)), getGame(), tipo === "supervisor" ? getMisionEquipoKey(nombre) : Promise.resolve(null)]);
+  const mEq = misionEquipo(misionKey);
+  const progEq = mEq.progreso(team);
+  const enRiesgo = team.flatMap((x) => RACHA_KPIS.filter((k) => game.vendors.get(x.id)!.rachas[k].estado === "riesgo").map((k) => ({ x, k, r: game.vendors.get(x.id)!.rachas[k] }))).sort((a, b) => b.r.meses - a.r.meses);
+  const mvps = [...new Set(team.map((x) => x.sucursal))].map((s) => game.mvpSucursal.get(s)).filter((m) => m && team.some((x) => x.id === m.id));
+  const esDT = game.dtDelMes?.supervisor === nombre;
   const byId = new Map(team.map((x) => [x.id, x]));
 
   // Puesto del equipo entre todos los equipos del mismo nivel (por puntaje promedio)
@@ -42,7 +48,6 @@ export async function EquipoView({ tipo, nombre }: { tipo: "supervisor" | "regio
 
   return (
     <div className="space-y-8">
-      <LiveRefresh url={supabaseUrl()} anonKey={(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "").trim()} ids={team.map((x) => x.id).join(",")} />
       <div>
         <div className="text-xs font-bold uppercase tracking-[0.3em] text-acento">{tipo === "supervisor" ? "Supervisor" : "Regional"} · {nombreMes(MES_ACTUAL)}</div>
         <h1 className="font-display text-4xl font-black uppercase leading-none sm:text-5xl">{nombre}</h1>
@@ -54,6 +59,35 @@ export async function EquipoView({ tipo, nombre }: { tipo: "supervisor" | "regio
         <Stat label="Puntaje promedio" value={fmtPts(prom)} sub={`${team.filter((x) => x.s.nivel === "Oro" || x.s.nivel === "Diamante").length} en Oro o Diamante`} />
         <Stat label="Puesto del equipo" value={`#${puestoEquipo}`} sub={`de ${equipos.length} ${tipo === "supervisor" ? "equipos" : "regionales"}`} />
         <Stat label="Bloqueados" value={`${team.filter((x) => x.s.bloqueado).length}`} sub="por Venta o Cobranzas en rojo" color={bloqCob.length ? "#ef4444" : "#22c55e"} />
+      </section>
+
+      {esDT && <div className="rounded-xl border border-acento/60 bg-acento/10 px-4 py-3 font-display text-xl font-black uppercase text-acento">🧠 DT del Mes: tu equipo es el que más mejoró del país (+{game.dtDelMes!.mejora.toFixed(1).replace(".", ",")} pts promedio)</div>}
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="panel p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="font-display text-2xl font-black uppercase">{mEq.icono} Misión colectiva</h2>
+            <ElegirMision opciones={MISIONES_EQUIPO.map((m) => ({ key: m.key, titulo: m.titulo, icono: m.icono }))} actual={mEq.key} editable={editable} />
+          </div>
+          <div className="mt-1 font-semibold">{mEq.titulo}</div>
+          <div className="text-sm text-niebla">{mEq.descripcion} Premio: 🔥 Tercer Tiempo.</div>
+          <div className="mt-3 h-3 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full" style={{ width: `${Math.round(progEq * 100)}%`, background: progEq >= 1 ? "#22c55e" : "linear-gradient(90deg,#e4002b,#ffd100)" }} /></div>
+          <div className="mt-1 text-sm">{progEq >= 1 ? "✅ ¡Cumplida! Se viene el Tercer Tiempo" : `${Math.round(progEq * 100)}% de avance`}</div>
+          {mvps.map((m) => <div key={m!.id} className="mt-2 text-sm">⭐ MVP {team.find((x) => x.id === m!.id)!.sucursal}: <b>{team.find((x) => x.id === m!.id)!.nombre}</b> (+{m!.mejora.toFixed(1).replace(".", ",")} pts)</div>)}
+        </div>
+        <div className="panel p-4">
+          <h2 className="font-display text-2xl font-black uppercase">🔥 Rachas en riesgo</h2>
+          {enRiesgo.length === 0 && <div className="mt-2 text-sm text-niebla">Ninguna racha en riesgo este mes 👌</div>}
+          <ul className="mt-2 space-y-1.5 text-sm">
+            {enRiesgo.slice(0, 8).map(({ x, k, r }) => (
+              <li key={x.id + k} className="flex items-center gap-2">
+                <span className="llama">🔥</span>
+                <Link href={`/vendedor/${x.id}`} className="font-semibold hover:text-acento">{x.nombre}</Link>
+                <span className="text-niebla">{r.meses} meses en {RACHA_LABEL[k]} · {r.falta}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -73,7 +107,7 @@ export async function EquipoView({ tipo, nombre }: { tipo: "supervisor" | "regio
               <tbody>
                 {team.map((x) => (
                   <tr key={x.id}>
-                    <td className="whitespace-nowrap pr-2"><Link href={`/vendedor/${x.id}`} className="font-semibold hover:text-acento">{x.nombre}</Link></td>
+                    <td className="whitespace-nowrap pr-2"><Link href={`/vendedor/${x.id}`} className="font-semibold hover:text-acento">{x.nombre}</Link> {editable && <ReconocerBtn vendedorId={x.id} nombre={x.nombre} />}</td>
                     {KPIS.map((k) => (
                       <td key={k.key} className="rounded-md text-center font-display text-base font-bold text-noche" style={{ background: SEM_BG[x.s.semaforos[k.key]] }} title={`${k.nombre}: cumplimiento ${Math.round(x.s.cumpl[k.key] * 100)}%`}>
                         {Math.round(x.s.cumpl[k.key] * 100)}

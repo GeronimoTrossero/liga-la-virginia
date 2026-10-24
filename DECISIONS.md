@@ -34,3 +34,23 @@
 - Clásicos: Litoral (Santa Fe–Rosario), Norte (Tucumán–Salta), Costa (Mar del Plata–Bahía Blanca), Cuyo vs Centro (Mendoza–Córdoba), NEA (Resistencia–Posadas). Marcador = KPIs ganados.
 - Copa Derbi: la tiene la sucursal #1 de la liga de sucursales del mes; se muestran los últimos 3 tenedores.
 - Rutas `/regional/[nombre]` reutilizan la vista de supervisor con todo el equipo regional.
+
+## V2 (prompt maestro V2)
+- **Datos reales: 135 vendedores y 15 sucursales** (el prompt V2 dice 140/16; mandan los datos).
+- **Login**: tabla `usuario` + PIN con scrypt + JWT HS256 (`jose`) en cookie httpOnly 12 h. `AUTH_SECRET` opcional: si falta se deriva de la service role, así no hay que cargar otra env var en Vercel.
+- **Supervisores con apellido repetido** (Ceballos Natalia / Ceballos Romina): el id es `sup-<apellido>-<nombre>`. El resto `sup-<apellido>` (ej. `sup-pintos`).
+- **Sin anon**: se borraron las políticas SELECT públicas (`schema-v2.sql`); verificado con la REST API (devuelve `[]`). La anon key ya no se usa.
+- **SWR en vez de Realtime**: polling cada 2 s a `/api/live`, que devuelve una firma (conteo + último id) de `ajuste_kpi`, `automation_log`, `reconocimiento` y `mision_equipo`, filtrada por los vendedores visibles para la sesión. Si cambia, `router.refresh()` vuelve a renderizar los Server Components (el cálculo sigue en el servidor).
+- **Modo presentador**: `<details>` discreto en el footer, solo con sesión iniciada; re-emite la cookie para el usuario elegido. Apagable con `MODO_PRESENTADOR=off`.
+- **Rutas por rol**: vendedor → solo `/vendedor/<su id>`; supervisor → `/supervisor/<su nombre>`, el detalle de sus vendedores y `/liga`; gerencia → todo (`/liga`, `/temporada`, `/regional/*`).
+- **Nivel mensual vs nivel de temporada**: la carta muestra el nivel mensual (umbrales absolutos + candado); el nivel de temporada es por percentil sobre el promedio de los 3 meses: Diamante top 5%, Oro siguiente 20%, Plata siguiente 40%, Bronce resto (interpreté los % como tramos consecutivos).
+- **Temporadas**: Nov–Ene, Feb–Abr, May–Jul, Ago–Oct. La actual (Ago–Oct 2026) incluye octubre en vivo.
+- **Rachas**: se cuentan sobre meses cerrados; el mes en curso muestra estado (viva / protegida / en riesgo / arrancala) sin consumir protectores todavía. "En riesgo" = había racha y el KPI hoy no está en verde (ni cubierto por protector).
+- **Protector**: +1 por mes con podio general, podio en algún KPI o 2+ misiones individuales cumplidas; tope según nivel mensual (Bronce 0). Se consumen en orden VTA, COB, REL, ENT.
+- **Puntos de Liga**: misiones = las 4 individuales del mes (Lanzamiento Total, Cobranza Limpia, Cero Rebotes, Relevamiento Perfecto; + Copa del Café en junio), evaluadas para todos los meses.
+- **Tu Liga**: 14 divisiones de 9–10 armadas por el promedio de la temporada anterior; dentro se ordena por promedio de la temporada actual (desempate: Puntos de Liga). Nombres de café (Ristretto, Espresso…).
+- **Misión colectiva**: por equipo de supervisor (no por sucursal), elegible entre 3; default "Nadie en rojo en Cobranzas".
+- **Cinta de Capitán**: sucursal con la cadena más larga de meses con promedio ≥ promedio nacional. **MVP**: mayor mejora de puntaje vs mes anterior dentro de la sucursal. **DT del Mes**: supervisor con mayor mejora del promedio del equipo.
+- **Adopción** en la vista gerencia es un dato **simulado** (83%) y está rotulado así.
+- **Agente de góndola**: persiste el resultado (marca clientes relevados + `ajuste_kpi` de encuestas) para que impacte en vivo; `Reiniciar demo` lo revierte. El vendedor demo (V052) tiene solo 1 encuesta pendiente: el agente completa "hasta 5".
+- **Álbum de figuritas** fuera de la vista vendedor (pedido V2). Las figuritas siguen en la base y alimentan los protectores (podio por KPI).

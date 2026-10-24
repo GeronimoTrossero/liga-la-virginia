@@ -1,61 +1,47 @@
 import "server-only";
-import { cookies } from "next/headers";
-import { supabasePublic } from "./supabase";
+import { cache } from "react";
+import { supabaseAdmin } from "./supabase";
 import { rankear, type Ranked, type VendedorInfo } from "./board";
-import { MES_ACTUAL, mesAnterior, TEMPORADA } from "./config";
+import { MES_ACTUAL, MESES, mesAnterior, TEMPORADA } from "./config";
+import { computeGame, type Game } from "./game";
 import { RAW_FIELDS, type Raw, type RawField } from "./scoring";
 
-const db = () => supabasePublic();
+const db = () => supabaseAdmin(); // siempre servidor: anon no tiene lectura
 
-export type Viewer =
-  | { rol: "vendedor"; id: string }
-  | { rol: "supervisor"; id: string }
-  | { rol: "regional"; id: string }
-  | { rol: "gerencia" };
-
-export async function getViewer(): Promise<Viewer> {
-  const v = (await cookies()).get("ver_como")?.value;
-  if (!v) return { rol: "gerencia" };
-  const [rol, ...rest] = decodeURIComponent(v).split(":");
-  const id = rest.join(":");
-  if ((rol === "vendedor" || rol === "supervisor" || rol === "regional") && id) return { rol, id };
-  return { rol: "gerencia" };
-}
-
-export async function getVendedores(): Promise<VendedorInfo[]> {
+export const getVendedores = cache(async (): Promise<VendedorInfo[]> => {
   const { data, error } = await db().from("vendedor").select("*").order("id");
   if (error) throw error;
   return data as VendedorInfo[];
-}
+});
 
 type KpiRow = Raw & { vendedor_id: string; mes: string };
 
-async function getKpiRows(meses: string[]): Promise<KpiRow[]> {
-  const { data, error } = await db().from("kpi_mes").select("*").in("mes", meses).limit(2000);
-  if (error) throw error;
-  return (data as KpiRow[]).map((r) => {
+const getKpiRows = cache(async (): Promise<KpiRow[]> => {
+  const out: KpiRow[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db().from("kpi_mes").select("*").order("mes").order("vendedor_id").range(from, from + 999);
+    if (error) throw error;
+    out.push(...(data as KpiRow[]));
+    if (!data || data.length < 1000) break;
+  }
+  return out.map((r) => {
     const o = { ...r };
     for (const f of RAW_FIELDS) o[f] = Number(o[f]);
     return o;
   });
-}
+});
 
 export type Ajuste = { id: number; vendedor_id: string; mes: string; campo: RawField; delta: number; origen: string; created_at: string };
 
-export async function getAjustes(mes = MES_ACTUAL): Promise<Ajuste[]> {
-  const { data, error } = await db().from("ajuste_kpi").select("*").eq("mes", mes).order("created_at");
+export const getAjustes = cache(async (mes: string = MES_ACTUAL): Promise<Ajuste[]> => {
+  const { data, error } = await db().from("ajuste_kpi").select("*").eq("mes", mes).order("id");
   if (error) throw error;
   return (data as Ajuste[]).map((a) => ({ ...a, delta: Number(a.delta) }));
-}
+});
 
-/** Tablero de un mes: puntajes y rankings calculados con lib/scoring.ts (+ ajustes en vivo del mes en curso). */
-export async function getBoard(mes: string): Promise<Ranked[]> {
-  const prev = mesAnterior(mes);
-  const [vends, rows, ajustes] = await Promise.all([
-    getVendedores(),
-    getKpiRows(prev ? [mes, prev] : [mes]),
-    mes === MES_ACTUAL ? getAjustes(mes) : Promise.resolve([] as Ajuste[]),
-  ]);
+/** Todos los tableros mensuales calculados con lib/scoring.ts (+ ajustes en vivo del mes en curso). */
+export const getBoards = cache(async (): Promise<Map<string, Ranked[]>> => {
+  const [vends, rows, ajustes] = await Promise.all([getVendedores(), getKpiRows(), getAjustes(MES_ACTUAL)]);
   const info = new Map(vends.map((v) => [v.id, v]));
   const build = (m: string) =>
     rows.filter((r) => r.mes === m && info.has(r.vendedor_id)).map((r) => {
@@ -63,8 +49,15 @@ export async function getBoard(mes: string): Promise<Ranked[]> {
       if (m === MES_ACTUAL) for (const a of ajustes) if (a.vendedor_id === r.vendedor_id && RAW_FIELDS.includes(a.campo)) raw[a.campo] = Math.max(0, raw[a.campo] + a.delta);
       return { ...info.get(r.vendedor_id)!, raw };
     });
-  return rankear(build(mes), prev ? build(prev) : undefined);
+  return new Map(MESES.map((m) => { const p = mesAnterior(m); return [m, rankear(build(m), p ? build(p) : undefined)] as const; }));
+});
+
+export async function getBoard(mes: string): Promise<Ranked[]> {
+  return (await getBoards()).get(mes) ?? [];
 }
+
+/** Moneda 2 (Puntos de Liga, rachas, temporadas, divisiones). */
+export const getGame = cache(async (): Promise<Game> => computeGame(MESES, await getBoards(), MES_ACTUAL));
 
 export type Anual = VendedorInfo & { puntaje_prom: number; rank_general: number; rank_sucursal: number; meses_podio: number; mejor_mes: string };
 
@@ -124,4 +117,28 @@ export async function getAutomationLog(vendedorIds?: string[]): Promise<LogRow[]
   const { data, error } = await q;
   if (error) throw error;
   return data as LogRow[];
+}
+
+export type Reconocimiento = { id: number; de: string; para: string; mensaje: string; created_at: string };
+export async function getReconocimientos(vendedorIds: string[]): Promise<Reconocimiento[]> {
+  const { data, error } = await db().from("reconocimiento").select("*").in("para", vendedorIds).order("id", { ascending: false }).limit(50);
+  if (error) throw error;
+  return data as Reconocimiento[];
+}
+
+export async function getMisionEquipoKey(supervisor: string, mes = MES_ACTUAL): Promise<string | null> {
+  const { data } = await db().from("mision_equipo").select("mision_key").eq("supervisor", supervisor).eq("mes", mes).maybeSingle<{ mision_key: string }>();
+  return data?.mision_key ?? null;
+}
+
+/** Firma de cambios en vivo para el polling SWR (filtrada por los vendedores visibles en la sesión). */
+export async function liveVersion(vendedorIds: string[] | null) {
+  const q = (t: string, col = "vendedor_id") => {
+    let x = db().from(t).select("id", { count: "exact" }).order("id", { ascending: false }).limit(1);
+    if (vendedorIds) x = x.in(col, vendedorIds);
+    return x;
+  };
+  const [a, l, r] = await Promise.all([q("ajuste_kpi"), q("automation_log"), q("reconocimiento", "para")]);
+  const { data: me } = await db().from("mision_equipo").select("updated_at").order("updated_at", { ascending: false }).limit(1);
+  return [a, l, r].map((x) => `${x.count ?? 0}.${(x.data?.[0] as { id?: number } | undefined)?.id ?? 0}`).join("-") + `-${me?.[0]?.updated_at ?? ""}`;
 }

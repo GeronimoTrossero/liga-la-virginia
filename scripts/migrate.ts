@@ -9,7 +9,7 @@ async function main() {
     console.error("Falta DATABASE_URL (Session pooler URI de Supabase). Alternativa: pegá supabase/schema.sql en el SQL Editor de Supabase.");
     process.exit(1);
   }
-  const sql = fs.readFileSync(path.join(process.cwd(), "supabase", "schema.sql"), "utf8");
+  const sql = ["schema.sql", "schema-v2.sql"].map((f) => fs.readFileSync(path.join(process.cwd(), "supabase", f), "utf8")).join("\n");
   const client = new Client({ connectionString: url, ssl: { rejectUnauthorized: false } });
   await client.connect();
   await client.query(sql);

@@ -11,15 +11,18 @@
     "seed": "tsx scripts/seed.ts",
     "validate": "tsx scripts/validate.ts",
     "test": "tsx scripts/test-scoring.ts",
-    "dev:local": "node --use-system-ca node_modules/next/dist/bin/next dev"
+    "dev:local": "node --use-system-ca node_modules/next/dist/bin/next dev",
+    "seed:usuarios": "tsx scripts/seed-usuarios.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.118.0",
     "framer-motion": "^14.6.0",
+    "jose": "^6.2.13",
     "next": "15.5.28",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "server-only": "^0.0.1"
+    "server-only": "^0.0.1",
+    "swr": "^2.5.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

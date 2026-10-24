@@ -151,24 +151,12 @@ create table if not exists automation_log (
   created_at timestamptz not null default now()
 );
 
--- RLS: lectura pública para anon en las tablas del juego; escrituras solo con service role.
+-- RLS activado sin políticas: anon no lee nada. Lecturas y escrituras van por el servidor (service role) filtrando por sesión.
+-- Ver schema-v2.sql (usuarios, misión de equipo, reconocimientos).
 do $$
 declare t text;
 begin
   foreach t in array array['vendedor','kpi_mes','score_mes','score_anual','figurita','mision','mision_progreso','lanzamiento','cliente_demo','venta_familia_demo','ajuste_kpi','automation_log'] loop
     execute format('alter table %I enable row level security', t);
-    execute format('drop policy if exists "lectura publica" on %I', t);
-    execute format('create policy "lectura publica" on %I for select to anon, authenticated using (true)', t);
-  end loop;
-end $$;
-
--- Realtime para que la carta se actualice sola cuando llega un pago.
-do $$
-declare t text;
-begin
-  foreach t in array array['cliente_demo','ajuste_kpi','automation_log'] loop
-    if not exists (select 1 from pg_publication_tables where pubname = 'supabase_realtime' and tablename = t) then
-      execute format('alter publication supabase_realtime add table %I', t);
-    end if;
   end loop;
 end $$;

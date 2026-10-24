@@ -136,7 +136,7 @@ export function construirPlan(raw: Raw, clientes: ClienteLite[], familias: Famil
   const sr = clientes.filter((c) => !c.relevado);
   plan.rel = {
     kpi: "rel",
-    resumen: `${raw.encuestas_asignadas - raw.encuestas_realizadas} encuestas pendientes`,
+    resumen: ((n) => (n === 1 ? "1 encuesta pendiente" : `${n} encuestas pendientes`))(raw.encuestas_asignadas - raw.encuestas_realizadas),
     grupos: [{ titulo: "Relevar en la próxima visita", acciones: sr.map((c) => ({ id: `rel-${c.id}`, kpi: "rel" as const, titulo: c.nombre_comercio, detalle: "encuesta asignada sin hacer", delta: { encuestas_realizadas: 1 } })) }],
   };
 

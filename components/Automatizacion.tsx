@@ -33,8 +33,8 @@ export function Automatizacion({ vendedorId, logs, impagos }: { vendedorId: stri
     <section className="panel p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <h2 className="font-display text-2xl font-black uppercase">🤖 Cobranza en piloto automático</h2>
-          <div className="text-sm text-niebla">Recordatorios por WhatsApp a quienes vencen en los próximos 5 días. Cuando el cliente responde &quot;ya pagué&quot;, tu carta sube sola.</div>
+          <h2 className="font-display text-2xl font-black uppercase">🤖 Agente de Cobranzas Autónomo</h2>
+          <div className="text-sm text-niebla">Manda recordatorios por WhatsApp a quienes vencen en los próximos 5 días y escucha las respuestas. Cuando el cliente dice &quot;ya pagué&quot;, el cobro se registra y tu carta sube sola. Listo para n8n + Twilio.</div>
         </div>
         <div className="flex gap-2">
           <button disabled={pending} onClick={run} className="rounded-lg bg-acento px-3 py-2 text-sm font-bold text-noche disabled:opacity-50">⏩ Simular: pasaron 5 días</button>

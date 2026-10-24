@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import { subirFotoGondola } from "@/app/actions";
 import { motion, AnimatePresence } from "framer-motion";
 import { Carta } from "./Carta";
 import { KPI_BY_KEY, fmtPct, fmtPts, puestoPara, score, simular, aplicar, sumarDeltas, type KpiKey, type Nivel, type Raw } from "@/lib/scoring";
@@ -18,11 +20,24 @@ type Props = {
   familias: FamiliaLite[];
   lanzamientos: LanzLite[];
   hoy: string;
+  extra?: ReactNode;
+  liga?: ReactNode;
 };
 
 export function VendedorPanel(p: Props) {
   const [checked, setChecked] = useState<Set<string>>(new Set());
   const [abierto, setAbierto] = useState<KpiKey | null>(null);
+  const router = useRouter();
+  const [gondola, setGondola] = useState<{ fase: "leyendo" | "listo"; hallazgos?: string[]; completadas?: number } | null>(null);
+  const [, startG] = useTransition();
+  function fotoGondola() {
+    setGondola({ fase: "leyendo" });
+    startG(async () => {
+      const [r] = await Promise.all([subirFotoGondola(p.me.id), new Promise((ok) => setTimeout(ok, 2200))]);
+      setGondola({ fase: "listo", hallazgos: r.hallazgos, completadas: r.completadas });
+      router.refresh();
+    });
+  }
   const [dibu, setDibu] = useState<{ loading: boolean; mensaje?: string; url?: string; error?: string; fuente?: string } | null>(null);
 
   const plan = useMemo(() => construirPlan(p.me.raw, p.clientes, p.familias, p.lanzamientos, p.hoy), [p.me.raw, p.clientes, p.familias, p.lanzamientos, p.hoy]);
@@ -114,6 +129,8 @@ export function VendedorPanel(p: Props) {
         </div>
       </section>
 
+      {p.extra}
+
       {/* ---------- Mejorá tu carta ---------- */}
       <section>
         <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
@@ -150,6 +167,12 @@ export function VendedorPanel(p: Props) {
                   {open && (
                     <motion.div initial={{ height: 0 }} animate={{ height: "auto" }} exit={{ height: 0 }} className="overflow-hidden border-t border-linea">
                       <div className="space-y-4 p-3 sm:p-4">
+                        {k === "rel" && (
+                          <button onClick={fotoGondola} disabled={gondola?.fase === "leyendo"} className="w-full rounded-xl border border-acento/60 bg-acento/10 p-3 text-left hover:bg-acento/20 disabled:opacity-60">
+                            <div className="font-display text-lg font-black uppercase text-acento">📸 Subir foto de góndola</div>
+                            <div className="text-xs text-niebla">Agente de Relevamiento Visual: la IA lee la foto y completa hasta 5 encuestas de una.</div>
+                          </button>
+                        )}
                         {pk.grupos.map((g) => (
                           <div key={g.titulo}>
                             <div className="mb-1 text-sm font-bold uppercase tracking-wide text-niebla">{g.titulo}</div>
@@ -186,6 +209,34 @@ export function VendedorPanel(p: Props) {
           })}
         </div>
       </section>
+
+      {p.liga}
+
+      {/* ---------- Agente de góndola ---------- */}
+      <AnimatePresence>
+        {gondola && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4" onClick={() => gondola.fase === "listo" && setGondola(null)}>
+            <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} className="panel w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+              <div className="font-display text-2xl font-black uppercase">📸 Agente de Relevamiento</div>
+              {gondola.fase === "leyendo" ? (
+                <div className="py-6 text-center">
+                  <div className="relative mx-auto h-32 w-48 overflow-hidden rounded-lg border border-linea bg-gradient-to-b from-amber-900/40 to-red-950/60">
+                    <div className="absolute inset-x-0 grid grid-cols-4 gap-1 p-2">{Array.from({ length: 12 }).map((_, i) => <div key={i} className="h-6 rounded-sm bg-white/20" />)}</div>
+                    <motion.div className="absolute inset-x-0 h-1 bg-acento shadow-[0_0_12px_#ffd100]" animate={{ top: ["0%", "100%", "0%"] }} transition={{ duration: 1.6, repeat: Infinity }} />
+                  </div>
+                  <div className="mt-3 text-sm text-niebla">Leyendo frentes, precios y faltantes…</div>
+                </div>
+              ) : (
+                <>
+                  <div className="mt-2 text-sm">{gondola.completadas ? <>✅ <b>{gondola.completadas} {gondola.completadas === 1 ? "encuesta completada" : "encuestas completadas"}</b> automáticamente.</> : "No quedaban encuestas pendientes 👏"}</div>
+                  <ul className="mt-2 space-y-1 text-xs text-niebla">{gondola.hallazgos?.map((h) => <li key={h}>• {h}</li>)}</ul>
+                  <button onClick={() => setGondola(null)} className="mt-4 w-full rounded-lg bg-lv py-2 font-bold text-white">Listo</button>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ---------- Modal Comodín Dibu ---------- */}
       <AnimatePresence>

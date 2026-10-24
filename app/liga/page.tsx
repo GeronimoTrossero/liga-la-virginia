@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { getAnual, getBoard } from "@/lib/data";
+import { getAnual, getBoard, getBoards, getGame } from "@/lib/data";
 import { groupBy, promedio, type Ranked } from "@/lib/board";
 import { MES_ACTUAL, MESES, TEMPORADA, nombreMes, mesAnterior } from "@/lib/config";
 import { KPIS, KPI_BY_KEY, fmtPts, nivelBase, type KpiKey } from "@/lib/scoring";
@@ -40,7 +40,14 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
   const mes = !anualMode && sp.mes && MESES.includes(sp.mes) ? sp.mes : MES_ACTUAL;
   const kpi = (KPIS.find((k) => k.key === sp.kpi)?.key ?? null) as KpiKey | null;
 
-  const [board, anual] = await Promise.all([getBoard(mes), getAnual()]);
+  const [board, anual, game, boards] = await Promise.all([getBoard(mes), getAnual(), getGame(), getBoards()]);
+  const actual = boards.get(MES_ACTUAL)!;
+  const kgV = actual.reduce((a, x) => a + x.raw.kilos_vendidos, 0);
+  const kgO = actual.reduce((a, x) => a + x.raw.kilos_objetivo, 0);
+  const nombreDe = new Map(actual.map((x) => [x.id, x]));
+  // Adopción: dato simulado para la demo (en producción sale del login y de las acciones registradas)
+  const activos = Math.round(actual.length * 0.83);
+  const muro = MESES.slice().reverse().map((m) => ({ m, x: boards.get(m)![0] }));
   const filtrar = <T extends { sucursal: string; regional: string; tipo: string }>(xs: T[]) =>
     xs.filter((x) => (!sp.sucursal || x.sucursal === sp.sucursal) && (!sp.regional || x.regional === sp.regional) && (!sp.tipo || x.tipo === sp.tipo));
 
@@ -68,8 +75,48 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
     <div className="space-y-12">
       <div className="pt-2">
         <div className="text-xs font-bold uppercase tracking-[0.3em] text-acento">Temporada {TEMPORADA} · {nombreMes(mes)}</div>
-        <h1 className="font-display text-5xl font-black uppercase leading-none">La Liga</h1>
+        <h1 className="font-display text-5xl font-black uppercase leading-none">La transmisión</h1>
       </div>
+
+      {/* La transmisión: tablero nacional */}
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
+        {[
+          ["Kilos del país", `${Math.round((kgV / kgO) * 100)}%`, `${Math.round(kgV).toLocaleString("es-AR")} de ${Math.round(kgO).toLocaleString("es-AR")} kg`],
+          ["Puntaje promedio", fmtPts(promedio(actual.map((x) => x.s.puntaje))), "135 vendedores · 15 sucursales"],
+          ["Bloqueados", String(actual.filter((x) => x.s.bloqueado).length), `${actual.filter((x) => x.s.semaforos.vta === "rojo" || x.s.semaforos.cob === "rojo").length} con VTA o COB en rojo`],
+          ["Adopción", `${Math.round((activos / actual.length) * 100)}%`, `${activos} activos esta semana (simulado)`],
+          ["Agentes IA", "2", "Cobranza WhatsApp · Góndola"],
+        ].map(([t, v, d]) => (
+          <div key={t} className="panel p-4">
+            <div className="text-xs font-bold uppercase tracking-widest text-niebla">{t}</div>
+            <div className="font-display text-4xl font-black text-acento">{v}</div>
+            <div className="text-xs text-niebla">{d}</div>
+          </div>
+        ))}
+      </section>
+
+      <section className="grid gap-4 md:grid-cols-3">
+        {game.dtDelMes && (
+          <Link href={`/supervisor/${encodeURIComponent(game.dtDelMes.supervisor)}`} className="panel block p-5 hover:border-acento">
+            <div className="text-xs font-bold uppercase tracking-widest text-niebla">🧠 DT del Mes</div>
+            <div className="mt-1 font-display text-3xl font-black uppercase leading-none">{game.dtDelMes.supervisor}</div>
+            <div className="mt-1 text-sm text-niebla">Su equipo mejoró +{game.dtDelMes.mejora.toFixed(1).replace(".", ",")} pts promedio vs. el mes pasado</div>
+          </Link>
+        )}
+        {game.cintaCapitan && (
+          <div className="panel p-5">
+            <div className="text-xs font-bold uppercase tracking-widest text-niebla">🎗️ Cinta de Capitán</div>
+            <div className="mt-1 font-display text-3xl font-black uppercase leading-none">{game.cintaCapitan.sucursal}</div>
+            <div className="mt-1 text-sm text-niebla">Cadena de {game.cintaCapitan.meses} meses seguidos por encima del promedio nacional</div>
+          </div>
+        )}
+        <Link href="/temporada" className="panel block border-acento/50 p-5 hover:border-acento">
+          <div className="text-xs font-bold uppercase tracking-widest text-acento">🏁 Cierre de temporada</div>
+          <div className="mt-1 font-display text-3xl font-black uppercase leading-none">{game.temporada.nombre}</div>
+          <div className="mt-1 text-sm text-niebla">Ascensos, descensos y campeones de cada división →</div>
+        </Link>
+      </section>
+
 
       {/* Podio */}
       <section>
@@ -225,6 +272,35 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
               <span className="flex-1 font-semibold">{s.s} <span className="text-xs font-normal text-niebla">· {s.n} vendedores · kilos {Math.round(s.kg * 100)}%</span></span>
               <div className="hidden h-2 w-40 overflow-hidden rounded-full bg-white/5 sm:block"><div className="h-full rounded-full bg-gradient-to-r from-acento to-diamante" style={{ width: `${Math.max(0, (s.prom - 80) * 5)}%` }} /></div>
               <span className="w-16 text-right font-display text-xl font-black">{fmtPts(s.prom)}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* MVP por sucursal */}
+      <section>
+        <h2 className="mb-1 font-display text-3xl font-black uppercase">⭐ MVP de cada sucursal</h2>
+        <div className="mb-4 text-sm text-niebla">El que más mejoró dentro de su equipo este mes: premia el esfuerzo, no solo al que ya venía arriba.</div>
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          {[...game.mvpSucursal.entries()].sort((a, b) => b[1].mejora - a[1].mejora).map(([suc, m]) => (
+            <div key={suc} className="panel flex items-center justify-between gap-2 p-3 text-sm">
+              <span><span className="text-niebla">{suc.split("/")[0]}</span> · <b>{nombreDe.get(m.id)?.nombre}</b></span>
+              <span className="font-display text-lg font-black text-verde">+{m.mejora.toFixed(1).replace(".", ",")}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Muro de la Fama */}
+      <section>
+        <h2 className="mb-4 font-display text-3xl font-black uppercase">🏛️ Muro de la Fama</h2>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+          {muro.map(({ m, x }) => (
+            <div key={m} className="panel p-3 text-center">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-niebla">{nombreMes(m, true)}</div>
+              <div className="mt-1 text-2xl">🏆</div>
+              <div className="font-display text-base font-black uppercase leading-tight">{x.nombre}</div>
+              <div className="text-xs text-niebla">{x.sucursal.split("/")[0]} · {fmtPts(x.s.puntaje)}</div>
             </div>
           ))}
         </div>

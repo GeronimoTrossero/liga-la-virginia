@@ -7,6 +7,7 @@ import { MESES, MES_ACTUAL, DEMO_TODAY, DEMO_VENDEDOR, TEMPORADA, zonaDe } from 
 import { misionesDelMes, progresoIndividual, progresoSucursal } from "../lib/missions";
 
 import { supabaseUrl } from "../lib/supabase";
+import { seedUsuarios } from "./seed-usuarios";
 const url = supabaseUrl();
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY!.trim();
 const db = createClient(url, key, { auth: { persistSession: false } });
@@ -203,7 +204,7 @@ async function main() {
 
   // ---------- escritura ----------
   console.log("Limpiando tablas…");
-  for (const [t, c] of [["automation_log", "id"], ["ajuste_kpi", "id"], ["mision_progreso", "mision_id"], ["mision", "id"], ["figurita", "id"], ["venta_familia_demo", "vendedor_id"], ["cliente_demo", "id"], ["lanzamiento", "id"], ["score_anual", "vendedor_id"], ["score_mes", "vendedor_id"], ["kpi_mes", "vendedor_id"], ["vendedor", "id"]]) await wipe(t, c);
+  for (const [t, c] of [["reconocimiento", "id"], ["mision_equipo", "supervisor"], ["automation_log", "id"], ["ajuste_kpi", "id"], ["mision_progreso", "mision_id"], ["mision", "id"], ["figurita", "id"], ["venta_familia_demo", "vendedor_id"], ["cliente_demo", "id"], ["lanzamiento", "id"], ["score_anual", "vendedor_id"], ["score_mes", "vendedor_id"], ["kpi_mes", "vendedor_id"], ["vendedor", "id"]]) await wipe(t, c);
   console.log("Insertando…");
   await insert("vendedor", vendedores);
   await insert("kpi_mes", rows.map((r) => ({ vendedor_id: r.id, mes: r.mes, ...r.raw })));
@@ -217,6 +218,7 @@ async function main() {
   await insert("venta_familia_demo", familias);
   const demo = porMes.get(MES_ACTUAL)!.find((x) => x.id === DEMO_VENDEDOR)!;
   console.log(`Vendedor demo: ${demo.nombre} (${demo.sucursal}) · ${demo.s.puntaje.toFixed(2)} · ${demo.s.motivoBloqueo ?? demo.s.nivel}`);
+  await seedUsuarios();
   console.log("✅ Seed completo");
 }
 
