@@ -9,6 +9,8 @@ import { getGame, getMisionEquipoKey } from "@/lib/data";
 import { MISIONES_EQUIPO, RACHA_KPIS, RACHA_LABEL, misionEquipo } from "@/lib/game";
 import { ReconocerBtn, ElegirMision } from "./SupervisorAcciones";
 import { CartaDe } from "./CartaDe";
+import { Brain, CheckCircle2, Star } from "lucide-react";
+import { Ilus, IconoMision } from "./Icono";
 import { NivelBadge, SEM_BG, SEM_COLOR, SEM_TEXTO, Progreso, SectionTitle, Stat } from "./ui";
 
 export async function EquipoView({ nombre, editable = false }: { nombre: string; editable?: boolean }) {
@@ -50,7 +52,7 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
   if (bloqCob.length) alertas.push({ c: "rojo", t: `${bloqCob.length} vendedor${bloqCob.length > 1 ? "es" : ""} bloqueado${bloqCob.length > 1 ? "s" : ""} en Plata por Cobranzas: ${bloqCob.map((x) => x.nombre).join(", ")}` });
   if (rojoCob.length) alertas.push({ c: "amarillo", t: `${rojoCob.length} con Cobranzas en rojo (riesgo de candado)` });
   for (const x of caidas) alertas.push({ c: "rojo", t: `${x.nombre} cayó ${-(x.deltaRank ?? 0)} puestos` });
-  for (const x of subidas.slice(0, 3)) alertas.push({ c: "verde", t: `${x.nombre} subió ${x.deltaRank} puestos 🚀` });
+  for (const x of subidas.slice(0, 3)) alertas.push({ c: "verde", t: `${x.nombre} subió ${x.deltaRank} puestos` });
 
   const pagos = logs.filter((l) => l.estado === "pagado").length;
   const recordatorios = logs.filter((l) => l.tipo === "recordatorio_cobranza").length;
@@ -70,28 +72,28 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
         <Stat label="Bloqueados" value={`${team.filter((x) => x.s.bloqueado).length}`} sub="por Venta o Cobranzas en rojo" tono={bloqCob.length ? "rojo" : "verde"} />
       </section>
 
-      {esDT && <div className="rounded-xl bg-sol px-4 py-3 text-lg font-bold text-azul">🧠 DT del Mes: tu equipo es el que más mejoró del país (+{game.dtDelMes!.mejora.toFixed(1).replace(".", ",")} pts promedio)</div>}
+      {esDT && <div className="rounded-xl bg-sol px-4 py-3 text-lg font-bold text-azul"><Brain className="mr-2 inline size-5" aria-hidden />DT del Mes: tu equipo es el que más mejoró del país (+{game.dtDelMes!.mejora.toFixed(1).replace(".", ",")} pts promedio)</div>}
 
       <section className="grid grid-cols-[minmax(0,1fr)] gap-4 lg:grid-cols-2">
         <div className="panel p-4 sm:p-5">
           <div className="flex flex-wrap items-end justify-between gap-2">
-            <div><div className="volanta">Todo el equipo</div><h2 className="titulo text-xl">{mEq.icono} Misión colectiva</h2></div>
+            <div><div className="volanta">Todo el equipo</div><h2 className="titulo flex items-center gap-2 text-xl"><IconoMision icono={mEq.icono} size={32} /> Misión colectiva</h2></div>
             <ElegirMision opciones={MISIONES_EQUIPO.map((m) => ({ key: m.key, titulo: m.titulo, icono: m.icono }))} actual={mEq.key} editable={editable} />
           </div>
           <div className="mt-3 font-bold text-tinta">{mEq.titulo}</div>
-          <div className="text-sm text-niebla">{mEq.descripcion} Premio: 🔥 Tercer Tiempo.</div>
+          <div className="text-sm text-niebla">{mEq.descripcion} Premio: Tercer Tiempo.</div>
           <Progreso p={progEq} alto="h-3" />
-          <div className="mt-1.5 text-sm font-semibold text-azul">{progEq >= 1 ? "✅ ¡Cumplida! Se viene el Tercer Tiempo" : `${Math.round(progEq * 100)}% de avance`}</div>
-          {mvps.map((m) => <div key={m!.id} className="mt-2 text-sm">⭐ MVP {team.find((x) => x.id === m!.id)!.sucursal}: <b>{team.find((x) => x.id === m!.id)!.nombre}</b> (+{m!.mejora.toFixed(1).replace(".", ",")} pts)</div>)}
+          <div className="mt-1.5 text-sm font-semibold text-azul">{progEq >= 1 ? <span className="inline-flex items-center gap-1"><CheckCircle2 className="anim-pop size-4" aria-hidden /> ¡Cumplida! Se viene el Tercer Tiempo</span> : `${Math.round(progEq * 100)}% de avance`}</div>
+          {mvps.map((m) => <div key={m!.id} className="mt-2 text-sm"><Star className="mr-1 inline size-4 fill-current text-dorado-texto" aria-hidden />MVP {team.find((x) => x.id === m!.id)!.sucursal}: <b>{team.find((x) => x.id === m!.id)!.nombre}</b> (+{m!.mejora.toFixed(1).replace(".", ",")} pts)</div>)}
         </div>
         <div className="panel p-4 sm:p-5">
           <div className="volanta">Para atender</div>
-          <h2 className="titulo text-xl">🔥 Rachas en riesgo</h2>
+          <h2 className="titulo flex items-center gap-2 text-xl"><Ilus n="llama" size={30} /> Rachas en riesgo</h2>
           {enRiesgo.length === 0 && <div className="mt-2 text-sm text-tenue">Ninguna racha en riesgo este mes.</div>}
           <ul className="mt-2 space-y-1.5 text-sm">
             {enRiesgo.slice(0, 8).map(({ x, k, r }) => (
               <li key={x.id + k} className="flex items-center gap-2">
-                <span className="llama">🔥</span>
+                <Ilus n="llama" size={22} />
                 <Link href={`/vendedor/${x.id}`} className="font-semibold text-tinta hover:text-azul-web hover:underline">{x.nombre}</Link>
                 <span className="text-niebla">{r.meses} meses en {RACHA_LABEL[k]} · {r.falta}</span>
               </li>
@@ -143,7 +145,7 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
             <ol className="space-y-2">
               {team.slice(0, 3).map((x, i) => (
                 <li key={x.id} className="flex items-center gap-3">
-                  <span className="text-2xl">{["🥇", "🥈", "🥉"][i]}</span>
+                  <Ilus n={(["oro", "plata", "bronce"] as const)[i]} size={36} alt={`${i + 1}°`} />
                   <Link href={`/vendedor/${x.id}`} className="flex-1 font-semibold text-tinta hover:text-azul-web hover:underline">{x.nombre}</Link>
                   <span className="cifra text-xl text-azul">{fmtPts(x.s.puntaje)}</span>
                 </li>
@@ -172,7 +174,7 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
 
       <section className="panel p-4 sm:p-5">
         <div className="flex flex-wrap items-end justify-between gap-2">
-          <div><div className="volanta">Agentes IA</div><h2 className="titulo text-xl">🤖 Automatizaciones</h2></div>
+          <div><div className="volanta">Agentes IA</div><h2 className="titulo text-xl">Automatizaciones</h2></div>
           <div className="flex flex-wrap gap-4 text-sm">
             <span><b className="cifra text-xl text-azul">{recordatorios}</b> <span className="text-niebla">recordatorios</span></span>
             <span><b className="cifra text-xl text-verde-t">{pagos}</b> <span className="text-niebla">pagos recibidos</span></span>

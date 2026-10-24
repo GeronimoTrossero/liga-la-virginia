@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { RACHA_KPIS, RACHA_LABEL, type Division, type VendorGame } from "@/lib/game";
 import { KPI_BY_KEY, fmtPts, type Nivel } from "@/lib/scoring";
-import { NIVEL_BG, NIVEL_COLOR, NIVEL_ICON, VARIEDADES } from "./ui";
+import { ArrowDown, ArrowUp, ShieldCheck } from "lucide-react";
+import { NIVEL_BG, NIVEL_COLOR, VARIEDADES } from "./ui";
+import { Ilus, NIVEL_ILUS } from "./Icono";
 
 const ESTADO_UI = {
   viva: { txt: "viva", cls: "border-sol bg-sol-suave text-azul", llama: true },
-  protegida: { txt: "🛡️ protegida", cls: "border-azul/30 bg-azul-suave text-azul", llama: true },
+  protegida: { txt: "protegida", cls: "border-azul/30 bg-azul-suave text-azul", llama: true },
   riesgo: { txt: "en riesgo", cls: "border-rojo bg-rojo-s text-rojo-t latido", llama: true },
   rota: { txt: "arrancala", cls: "border-linea bg-fondo text-niebla", llama: false },
 } as const;
@@ -17,10 +19,10 @@ export function RiesgoBanners({ g }: { g: VendorGame }) {
     <div className="space-y-2">
       {riesgos.map((k) => (
         <div key={k} role="alert" className="flex items-center gap-3 rounded-xl border-l-4 border-rojo bg-rojo-s px-4 py-3">
-          <span className="llama text-2xl" aria-hidden>🔥</span>
+          <Ilus n="llama" size={40} />
           <div>
             <div className="font-bold text-rojo-t">Tu racha de {g.rachas[k].meses} {g.rachas[k].meses === 1 ? "mes" : "meses"} en {KPI_BY_KEY[k].abbr} está en riesgo</div>
-            <div className="text-sm text-tinta">{g.rachas[k].falta ?? "Volvé a verde antes del cierre"} para salvarla{g.protectores > 0 ? " (o llegá a amarillo y usá un 🛡️)" : ""}.</div>
+            <div className="text-sm text-tinta">{g.rachas[k].falta ?? "Volvé a verde antes del cierre"} para salvarla{g.protectores > 0 ? " (o llegá a amarillo y usá un protector)" : ""}.</div>
           </div>
         </div>
       ))}
@@ -36,9 +38,9 @@ export function Rachas({ g }: { g: VendorGame }) {
           <div className="volanta">Constancia</div>
           <h2 className="titulo text-xl">Rachas</h2>
         </div>
-        <span className="text-sm" title="Protectores: se ganan con podio o misiones. Un KPI en amarillo consume uno y la racha sigue.">
-          {Array.from({ length: Math.max(g.protectorMax, g.protectores) }).map((_, i) => <span key={i} className={i < g.protectores ? "" : "opacity-25 grayscale"}>🛡️</span>)}
-          {g.protectorMax === 0 && <span className="text-xs text-tenue">🛡️ desde Plata</span>}
+        <span className="flex items-center gap-0.5 text-sm" title="Protectores: se ganan con podio o misiones. Un KPI en amarillo consume uno y la racha sigue.">
+          {Array.from({ length: Math.max(g.protectorMax, g.protectores) }).map((_, i) => <Ilus key={i} n="escudo" size={26} apagado={i >= g.protectores} quieto />)}
+          {g.protectorMax === 0 && <span className="flex items-center gap-1 text-xs text-tenue"><ShieldCheck className="size-3.5" aria-hidden /> desde Plata</span>}
           <span className="ml-1 text-xs font-semibold text-niebla">{g.protectores}/{g.protectorMax} protectores</span>
         </span>
       </div>
@@ -49,8 +51,8 @@ export function Rachas({ g }: { g: VendorGame }) {
           return (
             <div key={k} className={`rounded-xl border p-3 text-center ${ui.cls}`}>
               <div className="text-[11px] font-bold uppercase tracking-[0.14em] opacity-80">{RACHA_LABEL[k]}</div>
-              <div className="cifra mt-0.5 text-4xl leading-none">
-                <span className={ui.llama && r.meses > 0 ? "llama text-3xl" : "text-3xl opacity-30 grayscale"} aria-hidden>🔥</span>
+              <div className="cifra mt-0.5 flex items-center justify-center gap-1 text-4xl leading-none">
+                <Ilus n="llama" size={34} apagado={!(ui.llama && r.meses > 0)} />
                 {r.meses}
               </div>
               <div className="mt-1 text-[11px] font-semibold">{ui.txt}{r.estado !== "viva" && r.falta ? ` · ${r.falta}` : ""}</div>
@@ -74,11 +76,11 @@ export function TemporadaCard({ g, nombreTemp }: { g: VendorGame; nombreTemp: st
     <div className="panel p-4 sm:p-5">
       <div className="volanta">Temporada {nombreTemp}</div>
       <div className="mt-2 flex items-center gap-3">
-        <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full text-3xl" style={{ background: NIVEL_BG[g.nivelTemporada] }}>{NIVEL_ICON[g.nivelTemporada]}</span>
+        <span className="anim-pop grid h-16 w-16 shrink-0 place-items-center rounded-full" style={{ background: NIVEL_BG[g.nivelTemporada] }}><Ilus n={NIVEL_ILUS[g.nivelTemporada]} size={52} alt={g.nivelTemporada} /></span>
         <div>
           <div className="text-3xl font-extrabold leading-none" style={{ color: NIVEL_COLOR[g.nivelTemporada] }}>{g.nivelTemporada}</div>
           <div className="mt-1 text-xs text-niebla">
-            #{g.temporadaPuesto} por promedio ({fmtPts(g.temporadaProm)}) {sube ? <span className="font-semibold text-verde-t">· ⬆ subiste desde {g.nivelTemporadaPrev}</span> : baja ? <span className="font-semibold text-rojo-t">· ⬇ venías de {g.nivelTemporadaPrev}</span> : null}
+            #{g.temporadaPuesto} por promedio ({fmtPts(g.temporadaProm)}) {sube ? <span className="font-semibold text-verde-t">· <ArrowUp className="anim-subir inline size-3.5" aria-hidden /> subiste desde {g.nivelTemporadaPrev}</span> : baja ? <span className="font-semibold text-rojo-t">· <ArrowDown className="anim-bajar inline size-3.5" aria-hidden /> venías de {g.nivelTemporadaPrev}</span> : null}
           </div>
         </div>
       </div>
@@ -92,7 +94,7 @@ export function TemporadaCard({ g, nombreTemp }: { g: VendorGame; nombreTemp: st
           <div className="text-[10px] font-bold uppercase tracking-[0.14em] text-azul/80">Multiplicador</div>
         </div>
       </div>
-      <div className="mt-3 text-[11px] text-tenue">Nivel de temporada por percentil: 💎 top 5% · 🥇 20% · 🥈 40% · 🥉 resto. Los Puntos de Liga no tocan el Puntaje Oficial: alimentan beneficios y desempates.</div>
+      <div className="mt-3 text-[11px] text-tenue">Nivel de temporada por percentil: Diamante top 5% · Oro 20% · Plata 40% · Bronce resto. Los Puntos de Liga no tocan el Puntaje Oficial: alimentan beneficios y desempates.</div>
     </div>
   );
 }
@@ -124,8 +126,8 @@ export function TuLiga({ div, meId, nombres, linkear }: { div: Division; meId?: 
                   {linkear ? <Link href={`/vendedor/${m.id}`} className="hover:text-azul-web hover:underline">{n?.nombre}</Link> : n?.nombre}
                   <span className="text-xs font-normal opacity-70"> · {n?.sucursal.split("/")[0]}</span>
                 </span>
-                {m.zona === "ascenso" && <span className="text-[10px] font-bold text-verde-t">⬆ ASC</span>}
-                {m.zona === "descenso" && <span className="text-[10px] font-bold text-rojo-t">⬇ DESC</span>}
+                {m.zona === "ascenso" && <span className="inline-flex items-center text-[10px] font-bold text-verde-t"><ArrowUp className="anim-subir size-3" aria-hidden />ASC</span>}
+                {m.zona === "descenso" && <span className="inline-flex items-center text-[10px] font-bold text-rojo-t"><ArrowDown className="anim-bajar size-3" aria-hidden />DESC</span>}
                 <span className="w-14 text-right text-xs font-semibold opacity-80">{m.xp} PL</span>
                 <span className="cifra w-12 text-right">{fmtPts(m.prom)}</span>
               </li>

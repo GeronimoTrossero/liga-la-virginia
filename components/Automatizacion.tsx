@@ -1,6 +1,7 @@
 "use client";
 import { useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
+import { Bot, MessageCircle } from "lucide-react";
 import { simularPasaron5Dias, simularRespuestaPago, reiniciarDemo } from "@/app/actions";
 
 export type LogLite = { id: number; tipo: string; cliente_id: string | null; mensaje: string; estado: string; created_at: string; comercio?: string };
@@ -15,12 +16,12 @@ export function Automatizacion({ vendedorId, logs, impagos }: { vendedorId: stri
 
   const run = () => start(async () => {
     const r = await simularPasaron5Dias(vendedorId);
-    setMsg(r.enviados ? `🤖 Se enviaron ${r.enviados} recordatorios por WhatsApp (modo simulado)` : "No hay nuevos vencimientos en los próximos 5 días");
+    setMsg(r.enviados ? `Se enviaron ${r.enviados} recordatorios por WhatsApp (modo simulado)` : "No hay nuevos vencimientos en los próximos 5 días");
     router.refresh();
   });
   const pagar = (clienteId: string) => start(async () => {
     const r = await simularRespuestaPago(clienteId);
-    setMsg(r.pagado ? `💰 ¡Pagó ${r.cliente}! Cobros en plazo +${r.facturas}` : "Respuesta registrada");
+    setMsg(r.pagado ? `¡Pagó ${r.cliente}! Cobros en plazo +${r.facturas}` : "Respuesta registrada");
     router.refresh();
   });
   const reset = () => start(async () => {
@@ -34,7 +35,7 @@ export function Automatizacion({ vendedorId, logs, impagos }: { vendedorId: stri
       <div className="sobre-azul flex flex-wrap items-center justify-between gap-3 bg-azul px-4 py-4 text-white sm:px-5">
         <div className="max-w-2xl">
           <div className="volanta !text-sol">Agente IA autónomo</div>
-          <h2 className="text-xl font-bold sm:text-2xl">🤖 Agente de Cobranzas</h2>
+          <h2 className="flex items-center gap-2 text-xl font-bold sm:text-2xl"><Bot className="anim-flotar size-6" aria-hidden /> Agente de Cobranzas</h2>
           <div className="mt-1 text-sm text-white/80">Manda recordatorios por WhatsApp a quienes vencen en los próximos 5 días y escucha las respuestas. Cuando el cliente dice &quot;ya pagué&quot;, el cobro se registra y tu carta sube sola. Listo para n8n + Twilio.</div>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -55,7 +56,7 @@ export function Automatizacion({ vendedorId, logs, impagos }: { vendedorId: stri
               </div>
               <div className="whitespace-pre-wrap text-niebla">{l.mensaje}</div>
               {l.tipo === "recordatorio_cobranza" && l.cliente_id && impagosSet.has(l.cliente_id) && (
-                <button disabled={pending} onClick={() => pagar(l.cliente_id!)} className="btn btn-sm btn-azul mt-2">💬 El cliente respondió: &quot;Ya pagué&quot;</button>
+                <button disabled={pending} onClick={() => pagar(l.cliente_id!)} className="btn btn-sm btn-azul mt-2 inline-flex items-center gap-1.5"><MessageCircle className="size-4" aria-hidden /> El cliente respondió: &quot;Ya pagué&quot;</button>
               )}
             </li>
           ))}

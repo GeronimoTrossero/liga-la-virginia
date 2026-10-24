@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Carta } from "./Carta";
 import { KPI_BY_KEY, fmtPct, fmtPts, puestoPara, score, simular, aplicar, sumarDeltas, type KpiKey, type Nivel, type Raw } from "@/lib/scoring";
 import { construirPlan, potencialKpi, type Accion, type ClienteLite, type FamiliaLite, type LanzLite } from "@/lib/acciones";
+import { Camera, Check, CheckCircle2, Hand, Lock, LockOpen } from "lucide-react";
 import { SEM_COLOR, SEM_TEXTO, NIVEL_COLOR, NIVEL_BG, SectionTitle } from "./ui";
 
 export type RankRow = { id: string; nombre: string; sucursal: string; rank: number; puntaje: number; nivel: Nivel; bloqueado: boolean };
@@ -104,7 +105,7 @@ export function VendedorPanel(p: Props) {
                 <div className="cifra text-2xl text-azul">{puntos >= 0 ? "+" : ""}{fmtPts(puntos)} pts</div>
                 <div className="text-sm font-semibold text-tinta">
                   {rankSim < p.me.rank ? <>subís al <b>#{rankSim}</b></> : <>seguís en el #{rankSim}</>}
-                  {desbloquea && <> · <span className="chip" style={{ color: NIVEL_COLOR[s.nivel], background: NIVEL_BG[s.nivel] }}>🔓 desbloqueás {s.nivel}</span></>}
+                  {desbloquea && <> · <span className="chip" style={{ color: NIVEL_COLOR[s.nivel], background: NIVEL_BG[s.nivel] }}><LockOpen className="anim-pop mr-1 inline size-3.5" aria-hidden />desbloqueás {s.nivel}</span></>}
                   {subeNivel && <> · pasás a <span className="chip" style={{ color: NIVEL_COLOR[s.nivel], background: NIVEL_BG[s.nivel] }}>{s.nivel}</span></>}
                 </div>
                 <div className="mt-1 text-xs text-niebla">Simulación con {checked.size} {checked.size > 1 ? "acciones" : "acción"} · <button className="font-semibold text-azul-web underline" onClick={() => setChecked(new Set())}>limpiar</button></div>
@@ -123,7 +124,7 @@ export function VendedorPanel(p: Props) {
               #{p.me.rankSucursal} en {p.me.sucursal} (de {p.totalSucursal}) ·{" "}
               {p.me.deltaRank === null || p.me.deltaRank === 0 ? "mismo puesto que el mes pasado" : p.me.deltaRank > 0 ? <span className="font-semibold text-verde-t">subiste {p.me.deltaRank} puestos</span> : <span className="font-semibold text-rojo-t">bajaste {-p.me.deltaRank} puestos</span>}
             </div>
-            {actual.bloqueado && <div className="mt-3 rounded-lg border-l-4 border-ambar bg-ambar-s px-3 py-2 text-sm text-ambar-t">🔒 {actual.motivoBloqueo}. Con {fmtPts(actual.puntaje)} pts serías <b>{actual.nivelSinCandado}</b>: subí Cobranzas a amarillo y lo desbloqueás.</div>}
+            {actual.bloqueado && <div className="mt-3 rounded-lg border-l-4 border-ambar bg-ambar-s px-3 py-2 text-sm text-ambar-t"><Lock className="mr-1 inline size-4 align-[-0.15em]" aria-hidden />{actual.motivoBloqueo}. Con {fmtPts(actual.puntaje)} pts serías <b>{actual.nivelSinCandado}</b>: subí Cobranzas a amarillo y lo desbloqueás.</div>}
           </div>
           <RankingList rows={p.ranking} meId={p.me.id} />
         </div>
@@ -150,7 +151,7 @@ export function VendedorPanel(p: Props) {
                       <span className="inline-block h-3 w-3 shrink-0 rounded-full" style={{ background: SEM_COLOR[actual.semaforos[k]] }} aria-hidden />
                       <span className="cifra text-lg" style={{ color: SEM_TEXTO[actual.semaforos[k]] }}>{def.abbr}</span>
                       <span className="font-semibold text-tinta">{def.nombre}</span>
-                      {nSel > 0 && <span className="chip bg-azul text-white">{nSel} ✓</span>}
+                      {nSel > 0 && <span className="chip bg-azul text-white">{nSel} <Check className="inline size-3.5" aria-label="seleccionadas" /></span>}
                     </div>
                     <span className={`chip shrink-0 ${pts > 0.05 ? "bg-sol-suave text-azul" : "bg-fondo text-tenue"}`}>+{fmtPts(pts)} pts posibles</span>
                   </div>
@@ -167,7 +168,7 @@ export function VendedorPanel(p: Props) {
                       <div className="space-y-4 p-3 sm:p-4">
                         {k === "rel" && (
                           <button onClick={fotoGondola} disabled={gondola?.fase === "leyendo"} className="w-full rounded-xl border border-azul/20 bg-white p-3 text-left hover:border-azul disabled:opacity-60">
-                            <div className="flex items-center gap-2 font-bold text-azul"><span className="chip bg-azul text-white">Agente IA</span> 📸 Subir foto de góndola</div>
+                            <div className="flex items-center gap-2 font-bold text-azul"><span className="chip bg-azul text-white">Agente IA</span> <Camera className="size-5" aria-hidden /> Subir foto de góndola</div>
                             <div className="mt-0.5 text-xs text-niebla">Agente de Relevamiento Visual: la IA lee la foto y completa hasta 5 encuestas de una.</div>
                           </button>
                         )}
@@ -189,7 +190,7 @@ export function VendedorPanel(p: Props) {
                                     <span className="cifra shrink-0 text-xs text-azul">+{fmtPts(pa, 2)}</span>
                                     {a.dibu && (
                                       <button onClick={() => abrirDibu(a)} className="btn btn-sm btn-sol shrink-0" title="Comodín Dibu: arma el WhatsApp">
-                                        🧤 {a.dibu === "aviso_entrega" ? "Avisar" : "Dibu"}
+                                        <Hand className="mr-1 inline size-4" aria-hidden />{a.dibu === "aviso_entrega" ? "Avisar" : "Dibu"}
                                       </button>
                                     )}
                                   </li>
@@ -215,7 +216,7 @@ export function VendedorPanel(p: Props) {
         {gondola && (
           <motion.div key="gondola" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-azul-hondo/60 p-4 backdrop-blur-sm" onClick={() => gondola.fase === "listo" && setGondola(null)}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} role="dialog" aria-modal="true" aria-label="Agente de Relevamiento" className="panel w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="bg-azul px-5 py-3 text-white"><div className="volanta !text-sol">Agente IA</div><div className="text-lg font-bold">📸 Relevamiento visual</div></div>
+              <div className="bg-azul px-5 py-3 text-white"><div className="volanta !text-sol">Agente IA</div><div className="flex items-center gap-2 text-lg font-bold"><Camera className="size-5" aria-hidden /> Relevamiento visual</div></div>
               <div className="p-5">
               {gondola.fase === "leyendo" ? (
                 <div className="py-6 text-center">
@@ -227,7 +228,7 @@ export function VendedorPanel(p: Props) {
                 </div>
               ) : (
                 <>
-                  <div className="text-sm">{gondola.completadas ? <>✅ <b>{gondola.completadas} {gondola.completadas === 1 ? "encuesta completada" : "encuestas completadas"}</b> automáticamente.</> : "No quedaban encuestas pendientes."}</div>
+                  <div className="text-sm">{gondola.completadas ? <><CheckCircle2 className="anim-pop mr-1 inline size-4 text-verde-t" aria-hidden /><b>{gondola.completadas} {gondola.completadas === 1 ? "encuesta completada" : "encuestas completadas"}</b> automáticamente.</> : "No quedaban encuestas pendientes."}</div>
                   <ul className="mt-2 space-y-1 text-xs text-niebla">{gondola.hallazgos?.map((h) => <li key={h}>• {h}</li>)}</ul>
                   <button onClick={() => setGondola(null)} className="btn btn-azul mt-4 w-full">Listo</button>
                 </>
@@ -243,7 +244,7 @@ export function VendedorPanel(p: Props) {
         {dibu && (
           <motion.div key="dibu" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 grid place-items-center bg-azul-hondo/60 p-4 backdrop-blur-sm" onClick={() => setDibu(null)}>
             <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} role="dialog" aria-modal="true" aria-label="Comodín Dibu" className="panel w-full max-w-md overflow-hidden" onClick={(e) => e.stopPropagation()}>
-              <div className="bg-sol px-5 py-3 text-azul"><div className="text-[11px] font-bold uppercase tracking-[0.22em]">Asistente de mensajes</div><div className="text-lg font-bold">🧤 Comodín Dibu</div></div>
+              <div className="bg-sol px-5 py-3 text-azul"><div className="text-[11px] font-bold uppercase tracking-[0.22em]">Asistente de mensajes</div><div className="flex items-center gap-2 text-lg font-bold"><Hand className="anim-balanceo size-5" aria-hidden /> Comodín Dibu</div></div>
               <div className="p-5">
               <div className="mb-3 text-xs text-niebla">Revisalo y mandalo vos desde tu WhatsApp.</div>
               {dibu.loading && <div className="py-8 text-center text-niebla">Atajando el mensaje…</div>}
@@ -297,7 +298,7 @@ function RankingList({ rows, meId }: { rows: RankRow[]; meId: string }) {
           <div key={r.id} data-me={r.id === meId ? "" : undefined} className={`flex items-center gap-3 rounded-md px-2 py-1.5 text-sm ${r.id === meId ? "bg-sol font-bold text-azul" : "odd:bg-fondo/60"}`}>
             <span className="cifra w-8 text-right opacity-70">{r.rank}</span>
             <span className="min-w-0 flex-1 truncate">{r.nombre} <span className="text-xs font-normal opacity-70">· {r.sucursal}</span></span>
-            <span className="text-xs font-semibold" style={{ color: NIVEL_COLOR[r.nivel] }}>{r.bloqueado ? "🔒" : ""}{r.nivel}</span>
+            <span className="text-xs font-semibold" style={{ color: NIVEL_COLOR[r.nivel] }}>{r.bloqueado && <Lock className="mr-0.5 inline size-3" aria-label="bloqueado" />}{r.nivel}</span>
             <span className="cifra w-12 text-right">{fmtPts(r.puntaje)}</span>
           </div>
         ))}
