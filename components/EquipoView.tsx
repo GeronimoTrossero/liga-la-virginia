@@ -1,19 +1,28 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getAutomationLog, getBoard } from "@/lib/data";
+import { getAutomationLog, getBoards } from "@/lib/data";
 import { groupBy, promedio, type Ranked } from "@/lib/board";
-import { MES_ACTUAL, nombreMes } from "@/lib/config";
+import { MES_ACTUAL, MESES, nombreMes } from "@/lib/config";
+import { PuestoCelda, PuestoMesProvider, PuestoMesSelect, type PuestoHist } from "./PuestoMes";
 import { KPIS, fmtPts } from "@/lib/scoring";
 import { getGame, getMisionEquipoKey } from "@/lib/data";
 import { MISIONES_EQUIPO, RACHA_KPIS, RACHA_LABEL, misionEquipo } from "@/lib/game";
 import { ReconocerBtn, ElegirMision } from "./SupervisorAcciones";
 import { CartaDe } from "./CartaDe";
-import { NivelBadge, SEM_BG, SEM_COLOR, SEM_TEXTO, Delta, Progreso, SectionTitle, Stat } from "./ui";
+import { NivelBadge, SEM_BG, SEM_COLOR, SEM_TEXTO, Progreso, SectionTitle, Stat } from "./ui";
 
 export async function EquipoView({ nombre, editable = false }: { nombre: string; editable?: boolean }) {
-  const board = await getBoard(MES_ACTUAL);
+  const boards = await getBoards();
+  const board = boards.get(MES_ACTUAL) ?? [];
   const team = board.filter((x) => x.supervisor === nombre);
   if (!team.length) notFound();
+  const mesesConDatos = MESES.filter((m) => (boards.get(m)?.length ?? 0) > 0);
+  const porMes = new Map(mesesConDatos.map((m) => [m, new Map(boards.get(m)!.map((x) => [x.id, x]))]));
+  const histPuesto = (id: string): PuestoHist[] =>
+    mesesConDatos.map((m) => {
+      const r = porMes.get(m)!.get(id);
+      return { mes: m, label: nombreMes(m, true), rank: r?.rank ?? null, delta: r?.deltaRank ?? null };
+    });
   const [logs, game, misionKey] = await Promise.all([getAutomationLog(team.map((x) => x.id)), getGame(), getMisionEquipoKey(nombre)]);
   const mEq = misionEquipo(misionKey);
   const progEq = mEq.progreso(team);
@@ -94,6 +103,7 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
       <section className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
         <div className="panel min-w-0 p-4 sm:p-5">
           <SectionTitle volanta="Scorecard del equipo">Mapa de calor</SectionTitle>
+          <PuestoMesProvider inicial={MES_ACTUAL}>
           <div className="scrollbar-thin overflow-x-auto">
             <table className="w-full min-w-[640px] border-separate border-spacing-[3px] text-sm">
               <thead>
@@ -102,7 +112,7 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
                   {KPIS.map((k) => <th key={k.key} className="font-bold text-azul" title={k.nombre}>{k.abbr}<div className="text-[9px] font-normal normal-case text-tenue">peso {Math.round(k.peso * 100)}%</div></th>)}
                   <th>Pts</th>
                   <th>Nivel</th>
-                  <th>Puesto</th>
+                  <th>Puesto<PuestoMesSelect meses={mesesConDatos.map((m) => ({ value: m, label: nombreMes(m, true) }))} /></th>
                 </tr>
               </thead>
               <tbody>
@@ -116,12 +126,13 @@ export async function EquipoView({ nombre, editable = false }: { nombre: string;
                     ))}
                     <td className="cifra text-center text-base text-azul">{fmtPts(x.s.puntaje)}</td>
                     <td className="text-center"><NivelBadge nivel={x.s.nivel} bloqueado={x.s.bloqueado} /></td>
-                    <td className="whitespace-nowrap text-center text-xs">#{x.rank} <Delta d={x.deltaRank} /></td>
+                    <td className="whitespace-nowrap text-center text-xs"><PuestoCelda hist={histPuesto(x.id)} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          </PuestoMesProvider>
           <div className="mt-3 flex flex-wrap gap-3 text-xs text-niebla"><span>% de cumplimiento por KPI (tope 110).</span>{([["verde", "≥ 100"], ["amarillo", "85–99"], ["rojo", "< 85"]] as const).map(([s, t]) => <span key={s} className="chip" style={{ background: SEM_BG[s], color: SEM_TEXTO[s] }}>{s[0].toUpperCase() + s.slice(1)} {t}</span>)}</div>
         </div>
 
