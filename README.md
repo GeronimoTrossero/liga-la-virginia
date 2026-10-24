@@ -3,7 +3,7 @@
 **Shippear #3 · Desafío Ranking de Vendedores.** Los KPIs mensuales de los 135 vendedores de La Virginia convertidos en un juego **visual, no un CRM**: cada vendedor es una carta estilo FIFA, hay ranking completo (mensual y anual), niveles estilo Uber Pro con candado, misiones mensuales, figuritas, clásicos entre sucursales y **"Mejorá tu carta"**, que le dice a cada vendedor exactamente qué hacer para sumar puntos. Además, una **cobranza en piloto automático** (simulada) que, cuando el cliente responde "ya pagué", sube la carta en vivo.
 
 - **Repo:** https://github.com/GeronimoTrossero/liga-la-virginia
-- **Producción:** _(importar en vercel.com; ver "Deploy")_
+- **Producción:** https://liga-la-virginia.vercel.app
 
 ## Cómo correrlo
 
